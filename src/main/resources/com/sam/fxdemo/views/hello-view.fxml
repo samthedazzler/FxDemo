@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.VBox?>
 
 <!-- Main layout for the CSV table screen. -->
-<VBox alignment="TOP_LEFT" spacing="12.0" xmlns:fx="http://javafx.com/fxml"
+<VBox spacing="12.0" xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.sam.fxdemo.HelloController">
     <!-- Adds consistent spacing around the table view. -->
     <padding>

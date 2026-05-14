@@ -28,8 +28,8 @@ public class HelloController {
     @FXML
     private Button uploadButton;
 
-    @FXML
-    private Button apiStatusButton;
+//    @FXML
+//    private Button apiStatusButton;
 
     // Displays a short count/status message above the table.
     @FXML
@@ -61,7 +61,7 @@ public class HelloController {
         FileChooser fileChooser = new FileChooser();
 
         // Sets the dialog title shown to the user.
-        fileChooser.setTitle("Upload CSV File");
+        fileChooser.setTitle("Upload CSV File/s");
 
         // Limits the visible choices to CSV files while still allowing all files if needed.
         fileChooser.getExtensionFilters().addAll(

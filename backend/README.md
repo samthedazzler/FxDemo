@@ -2,7 +2,7 @@
 
 The JavaFX app starts this FastAPI service automatically with:
 
-```powershell
+```powershell   
 python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
 ```
 
