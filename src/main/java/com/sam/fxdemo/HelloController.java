@@ -29,7 +29,7 @@ public class HelloController {
     private Button uploadButton;
 
 //    @FXML
-//    private Button apiStatusButton;
+    private Button apiStatusButton;
 
     // Displays a short count/status message above the table.
     @FXML
