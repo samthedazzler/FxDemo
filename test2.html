@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advanced Agent Analytics Dashboard</title>
+
+<!-- ✅ FIXED CDN LINKS -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0b0f18;color:#e7ecf6;padding:20px;min-height:100vh}
+h1{margin-bottom:16px;font-size:1.5rem}
+h2{font-size:1.2rem}
+h3{font-size:.95rem;margin-bottom:10px}
+
+.upload-zone{border:2px dashed #2a3550;border-radius:10px;padding:28px;text-align:center;cursor:pointer;margin-bottom:14px;transition:border-color .2s,background .2s;color:#9aa5c0;font-size:.9rem}
+.upload-zone:hover,.upload-zone.drag{border-color:#3be8a6;background:#0f1520}
+.upload-zone input{display:none}
+.upload-zone span{display:block;font-size:2rem;margin-bottom:6px}
+
+.filter-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;background:#13192a;padding:14px 16px;border-radius:10px;margin-bottom:14px}
+.filter-group{display:flex;flex-direction:column;gap:4px;min-width:130px;flex:1}
+.filter-group label{font-size:11px;color:#9aa5c0;text-transform:uppercase;letter-spacing:.05em}
+.filter-group select,.filter-group input[type=date],.filter-group input[type=text]{background:#1b2236;border:1px solid #2a3550;color:#e7ecf6;padding:7px 10px;border-radius:6px;font-size:.82rem;outline:none;transition:border-color .15s;width:100%}
+.filter-group select:focus,.filter-group input:focus{border-color:#3be8a6}
+
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:#13192a;border-radius:10px;padding:12px 14px;border-left:3px solid #3be8a6}
+.kpi-label{font-size:10px;color:#9aa5c0;text-transform:uppercase;letter-spacing:.05em}
+.kpi-value{font-size:1.3rem;font-weight:700;margin-top:4px;color:#3be8a6}
+.kpi-sub{font-size:10px;color:#9aa5c0;margin-top:2px}
+
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.tab{padding:7px 13px;background:#1b2236;border-radius:6px;cursor:pointer;border:none;color:#e7ecf6;font-size:.82rem;transition:background .15s,color .15s;user-select:none}
+.tab:hover{background:#243050}
+.tab.active{background:#3be8a6;color:#000;font-weight:600}
+.page{display:none}
+.page.active{display:block}
+
+.card{background:#13192a;padding:14px;margin-bottom:12px;border-radius:10px;overflow-x:auto}
+.chart-wrap{position:relative;height:280px}
+.chart-wrap-sm{position:relative;height:220px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+
+.table-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.table-toolbar input{background:#1b2236;border:1px solid #2a3550;color:#e7ecf6;padding:6px 10px;border-radius:6px;font-size:.82rem;outline:none;flex:1;min-width:150px;transition:border-color .15s}
+.table-toolbar input:focus{border-color:#3be8a6}
+.table-toolbar span{font-size:11px;color:#9aa5c0;white-space:nowrap}
+table{width:100%;border-collapse:collapse;font-size:11px;min-width:480px}
+th{background:#1b2236;padding:7px 6px;text-align:left;position:sticky;top:0;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#9aa5c0;cursor:pointer;user-select:none;white-space:nowrap}
+th:hover{color:#3be8a6}
+th .sort-icon::after{content:'⇅'}
+th.sort-asc .sort-icon::after{content:'▲';color:#3be8a6}
+th.sort-desc .sort-icon::after{content:'▼';color:#3be8a6}
+.sort-icon{margin-left:4px;font-size:9px}
+td{padding:5px 6px;border-bottom:1px solid #1f2840}
+tr:hover td{background:#1a2235}
+.agent-link{cursor:pointer;color:#3be8a6;text-decoration:underline;text-underline-offset:2px}
+.status-badge{padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600}
+
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:#3be8a6;color:#000;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:.82rem;transition:opacity .15s;white-space:nowrap}
+.btn:hover{opacity:.85}
+.btn.secondary{background:#1b2236;color:#e7ecf6}
+.btn.ghost{background:transparent;color:#9aa5c0;border:1px solid #2a3550}
+.btn.ghost:hover{color:#e7ecf6;border-color:#3be8a6}
+.btn.warn{background:#f1c94e;color:#000}
+.btn-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+
+#toast{position:fixed;bottom:24px;right:24px;background:#3be8a6;color:#000;padding:10px 18px;border-radius:8px;font-weight:600;font-size:.875rem;opacity:0;pointer-events:none;transition:opacity .3s;z-index:999}
+#toast.show{opacity:1}
+.empty-state{text-align:center;padding:30px;color:#9aa5c0;font-size:.875rem}
+
+.insight-box{background:#0d1117;border:1px solid #2a3550;border-radius:8px;padding:12px;margin-top:10px}
+.insight-box h4{color:#f1c94e;font-size:.85rem;margin-bottom:8px}
+.insight-item{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #1f2840;font-size:.82rem}
+.insight-item:last-child{border:none}
+.insight-icon{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.ok{background:rgba(59,232,166,.2);color:#3be8a6}
+.warn-bg{background:rgba(241,201,78,.2);color:#f1c94e}
+.bad{background:rgba(241,110,78,.2);color:#f16e4e}
+.info-bg{background:rgba(78,154,241,.2);color:#4e9af1}
+
+@media(max-width:768px){.grid-2,.grid-3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<h1>📊 Advanced Agent Analytics Dashboard</h1>
+
+<div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+  <span>📂</span>
+  Drop your <strong>Agent_Breakdown CSV/Excel</strong> here or click to browse
+  <input type="file" id="fileInput" accept=".csv,.xlsx,.xls">
+</div>
+
+<!-- ================= FILTERS ================= -->
+<div class="filter-bar">
+  <div class="filter-group"><label>From Date</label><input type="date" id="fFrom"></div>
+  <div class="filter-group"><label>To Date</label><input type="date" id="fTo"></div>
+  <div class="filter-group"><label>Agent</label><select id="fAgent"><option value="">All Agents</option></select></div>
+  <div class="filter-group"><label>SRT Team</label><select id="fTeam"><option value="">All Teams</option></select></div>
+  <div class="filter-group"><label>Status</label><select id="fStatus"><option value="">All Statuses</option></select></div>
+  <div class="filter-group"><label>Status Group</label><select id="fStatusGroup"><option value="">All Groups</option></select></div>
+  <button class="btn ghost" onclick="resetFilters()">✕ Reset</button>
+  <button class="btn" onclick="applyFilters()">Apply Filters</button>
+</div>
+
+<div class="kpi-row" id="kpiRow">
+  <div class="kpi"><div class="kpi-label">Total Agents</div><div class="kpi-value" id="kpiAgents">—</div></div>
+  <div class="kpi"><div class="kpi-label">Total Records</div><div class="kpi-value" id="kpiRecords">—</div></div>
+  <div class="kpi"><div class="kpi-label">Total Duration</div><div class="kpi-value" id="kpiTotalDur">—</div><div class="kpi-sub" id="kpiTotalDurSub"></div></div>
+  <div class="kpi"><div class="kpi-label">Top Status</div><div class="kpi-value" id="kpiTopStatus">—</div><div class="kpi-sub" id="kpiTopStatusPct"></div></div>
+  <div class="kpi"><div class="kpi-label">Busiest Hour</div><div class="kpi-value" id="kpiBusiestHour">—</div></div>
+  <div class="kpi"><div class="kpi-label">Avg Duration/Record</div><div class="kpi-value" id="kpiAvgDur">—</div></div>
+  <div class="kpi"><div class="kpi-label">Top Team</div><div class="kpi-value" id="kpiTopTeam">—</div><div class="kpi-sub" id="kpiTopTeamSub"></div></div>
+  <div class="kpi"><div class="kpi-label">Date Range</div><div class="kpi-value" id="kpiDays">—</div><div class="kpi-sub">days of data</div></div>
+</div>
+
+<div class="tabs" role="tablist">
+  <button class="tab active" onclick="show(0)">📈 Overview</button>
+  <button class="tab" onclick="show(1)">👤 Agent Matrix</button>
+  <button class="tab" onclick="show(2)">🏢 Teams</button>
+  <button class="tab" onclick="show(3)">⏰ Time Analysis</button>
+  <button class="tab" onclick="show(4)">🔥 Heatmaps</button>
+  <button class="tab" onclick="show(5)">📅 Trends</button>
+  <button class="tab" onclick="show(6)">💡 Insights</button>
+</div>
+
+<!-- PAGE 0: Overview -->
+<div class="page active">
+  <div class="grid-2">
+    <div class="card"><h3>Status Distribution (by Duration)</h3><div class="chart-wrap"><canvas id="statusPieChart"></canvas></div></div>
+    <div class="card"><h3>Status Group Distribution</h3><div class="chart-wrap"><canvas id="statusGroupChart"></canvas></div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card"><h3>Top 10 Agents by Total Duration</h3><div class="chart-wrap"><canvas id="agentBarChart"></canvas></div></div>
+    <div class="card"><h3>Available vs Non-Available Time per Agent</h3><div class="chart-wrap"><canvas id="availStackChart"></canvas></div></div>
+  </div>
+  <div class="btn-row"><button class="btn" onclick="exportPage('overview')">⬇ Export Overview</button></div>
+</div>
+
+<!-- PAGE 1: Agent Matrix -->
+<div class="page">
+  <div class="card">
+    <h3>Agent × Status Matrix</h3>
+    <div class="table-toolbar">
+      <input type="text" id="matrixSearch" placeholder="Search agent ID…" oninput="filterMatrixTable()">
+      <span id="matrixCount"></span>
+    </div>
+    <table id="matrixTable"><tr><td class="empty-state" colspan="99">Upload a file to get started.</td></tr></table>
+  </div>
+  <div class="card"><h3>Stacked Duration by Agent</h3><div class="chart-wrap"><canvas id="stackChart"></canvas></div></div>
+  <div class="btn-row"><button class="btn" onclick="exportPage('matrix')">⬇ Export Matrix</button></div>
+</div>
+
+<!-- PAGE 2: Teams -->
+<div class="page">
+  <div class="grid-2">
+    <div class="card"><h3>Team Duration Distribution</h3><div class="chart-wrap"><canvas id="teamPieChart"></canvas></div></div>
+    <div class="card"><h3>Team Status Breakdown</h3><div class="chart-wrap"><canvas id="teamStatusChart"></canvas></div></div>
+  </div>
+  <div class="card">
+    <h3>Team Summary Table</h3>
+    <div class="table-toolbar">
+      <input type="text" id="teamSearch" placeholder="Search team…" oninput="filterTeamTable()">
+      <span id="teamCount"></span>
+    </div>
+    <table id="teamTable"></table>
+  </div>
+  <div class="btn-row"><button class="btn" onclick="exportPage('teams')">⬇ Export Teams</button></div>
+</div>
+
+<!-- PAGE 3: Time Analysis -->
+<div class="page">
+  <div class="grid-2">
+    <div class="card"><h3>Hourly Activity (Duration)</h3><div class="chart-wrap"><canvas id="hourChart"></canvas></div></div>
+    <div class="card"><h3>30-Min Interval Activity</h3><div class="chart-wrap"><canvas id="intervalChart"></canvas></div></div>
+  </div>
+  <div class="card"><h3>Hourly Breakdown Table</h3><table id="hourTable"></table></div>
+  <div class="btn-row"><button class="btn" onclick="exportPage('time')">⬇ Export Time Data</button></div>
+</div>
+
+<!-- PAGE 4: Heatmaps -->
+<div class="page">
+  <div class="card"><h3>Status × Hour Heatmap (bubble = duration)</h3><div class="chart-wrap"><canvas id="heatmapChart"></canvas></div></div>
+  <div class="card"><h3>Status × Day-of-Week Heatmap</h3><div class="chart-wrap"><canvas id="dowChart"></canvas></div></div>
+  <div class="card"><h3>Agent × Hour Activity Heatmap (record count)</h3><div class="chart-wrap" style="height:350px"><canvas id="agentHourHeatmap"></canvas></div></div>
+  <div class="btn-row"><button class="btn" onclick="exportPage('heatmap')">⬇ Export Heatmap Data</button></div>
+</div>
+
+<!-- PAGE 5: Trends -->
+<div class="page">
+  <div class="card"><h3>Daily Total Duration Trend</h3><div class="chart-wrap"><canvas id="trendChart"></canvas></div></div>
+  <div class="card"><h3>Daily Status Mix (Stacked Area)</h3><div class="chart-wrap"><canvas id="areaChart"></canvas></div></div>
+  <div class="card"><h3>Chat vs Available Ratio Over Time</h3><div class="chart-wrap"><canvas id="ratioChart"></canvas></div></div>
+  <div class="card">
+    <h3>Daily Summary Table</h3>
+    <table id="trendTable"></table>
+  </div>
+  <div class="btn-row"><button class="btn" onclick="exportPage('trends')">⬇ Export Trends</button></div>
+</div>
+
+<!-- PAGE 6: Insights -->
+<div class="page">
+  <div class="grid-2">
+    <div class="card">
+      <h3>🏆 Agent Performance Rankings</h3>
+      <table id="rankTable"></table>
+    </div>
+    <div class="card">
+      <h3>⚡ Auto-Generated Insights</h3>
+      <div id="insightsList" class="insight-box"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>📊 Status Efficiency Analysis</h3>
+    <div class="chart-wrap"><canvas id="efficiencyChart"></canvas></div>
+  </div>
+  <div class="card">
+    <h3>🕐 Agent Shift Pattern Analysis</h3>
+    <table id="shiftTable"></table>
+  </div>
+  <div class="btn-row">
+    <button class="btn" onclick="exportPage('insights')">⬇ Export Insights</button>
+    <button class="btn secondary" onclick="exportAllSheets()">⬇ Export Full Report (All Sheets)</button>
+  </div>
+</div>
+
+<!-- PAGE 7: Drilldown (hidden) -->
+<div class="page" id="drillPage">
+  <div class="card"><h2>🔍 Agent Drilldown: <span id="agentTitle"></span></h2></div>
+  <div class="grid-2">
+    <div class="card"><h3>Status Breakdown</h3><div class="chart-wrap"><canvas id="drillStatusChart"></canvas></div></div>
+    <div class="card"><h3>Hourly Pattern</h3><div class="chart-wrap"><canvas id="drillHourChart"></canvas></div></div>
+  </div>
+  <div class="card">
+    <h3>Activity Timeline</h3>
+    <div class="table-toolbar">
+      <input type="text" id="drillSearch" placeholder="Search status…" oninput="filterDrillTable()">
+      <span id="drillCount"></span>
+    </div>
+    <table id="drillTable"></table>
+  </div>
+  <div class="btn-row">
+    <button class="btn" onclick="exportPage('drill')">⬇ Export Agent Data</button>
+    <button class="btn secondary" onclick="show(lastTab)">⬅ Back</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ═══════════ STATE ═══════════ */
+let raw=[], filtered=[], agentMatrix=[], teamTableRows=[];
+let lastTab=0, currentDrillAgent='', drillRows=[];
+const sortState={};
+
+/* ═══════════ CHARTS ═══════════ */
+const charts={};
+function mkChart(id,config){
+  charts[id]?.destroy();
+  const el=document.getElementById(id);
+  if(!el)return null;
+  charts[id]=new Chart(el,config);
+  return charts[id];
+}
+
+const PALETTE=['#3be8a6','#4e9af1','#f1c94e','#f16e4e','#a78bfa','#f472b6','#34d399','#60a5fa','#fbbf24','#f87171','#818cf8','#fb923c','#2dd4bf','#e879f9','#a3e635','#38bdf8','#fb7185','#86efac'];
+const palette=n=>Array.from({length:n},(_,i)=>PALETTE[i%PALETTE.length]);
+
+/* ═══════════ TABS ═══════════ */
+const pages=[...document.querySelectorAll('.page')];
+const tabs=[...document.querySelectorAll('.tab')];
+function show(i){
+  pages.forEach(p=>p.classList.remove('active'));
+  tabs.forEach(t=>t.classList.remove('active'));
+  pages[i].classList.add('active');
+  if(tabs[i])tabs[i].classList.add('active');
+}
+
+/* ═══════════ UPLOAD ═══════════ */
+const zone=document.getElementById('uploadZone');
+zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag')});
+zone.addEventListener('dragleave',()=>zone.classList.remove('drag'));
+zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('drag');handleFile(e.dataTransfer.files[0])});
+document.getElementById('fileInput').addEventListener('change',e=>{if(e.target.files[0])handleFile(e.target.files[0])});
+
+function handleFile(file){
+  if(!file)return;
+  const ext=file.name.split('.').pop().toLowerCase();
+  toast('⏳ Loading file…');
+  if(ext==='csv'){
+    Papa.parse(file,{header:true,skipEmptyLines:true,dynamicTyping:false,
+      complete:res=>{process(res.data)},
+      error:err=>toast('❌ CSV error: '+err.message)});
+  } else if(['xlsx','xls'].includes(ext)){
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      try{
+        const wb=XLSX.read(ev.target.result,{type:'array',cellDates:true});
+        const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{raw:false,dateNF:'m/d/yyyy h:mm:ss AM/PM'});
+        process(rows);
+      }catch(e){toast('❌ Excel error: '+e.message)}
+    };
+    reader.readAsArrayBuffer(file);
+  } else {toast('❌ Unsupported file type')}
+}
+
+/* ═══════════ DATE PARSE — handles "4/12/2026 9:00:00 AM" format ═══════════ */
+function parseDate(val){
+  if(!val) return null;
+  if(val instanceof Date) return isNaN(val)?null:val;
+  const s=String(val).trim();
+  if(!s||s==='None'||s==='nan') return null;
+  let d=new Date(s);
+  if(!isNaN(d)) return d;
+  // M/D/YYYY H:MM:SS AM/PM
+  const m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})\s*(AM|PM)?/i);
+  if(m){
+    let hr=parseInt(m[4]);
+    const min=parseInt(m[5]),sec=parseInt(m[6]),ampm=(m[7]||'').toUpperCase();
+    if(ampm==='PM'&&hr<12)hr+=12;
+    if(ampm==='AM'&&hr===12)hr=0;
+    return new Date(parseInt(m[3]),parseInt(m[1])-1,parseInt(m[2]),hr,min,sec);
+  }
+  return null;
+}
+
+/* ═══════════ NORMALIZE ═══════════ */
+function normalize(r){
+  // flexible key finder
+  const get=(...keys)=>{
+    for(const k of keys){
+      const found=Object.keys(r).find(rk=>rk.trim().toLowerCase()===k.toLowerCase());
+      if(found!==undefined&&r[found]!==undefined&&r[found]!=='') return String(r[found]).trim();
+    }
+    return '';
+  };
+  const start=parseDate(get('Utc Start Time','UTC Start Time','Interval Start Time','start_time'));
+  const end=parseDate(get('Utc End Time','UTC End Time','end_time'));
+  const durMin=parseFloat(get('time_in_interval_m','Duration','duration_m'))||0;
+  const agentId=get('Agent Id','AgentId','agent_id','Agent ID','Agent');
+  const status=get('Status','status');
+  const team=get('SRT Team','Team','Group');
+  const statusGroup=get('Status Group','StatusGroup','status_group','GROUP VIEW PERMISSION FILTER');
+  const vendor=get('Vendor Site','Vendor','vendor_site');
+
+  return {agentId,status,team,statusGroup,vendor,start,end,
+          duration:durMin*60,durationMin:durMin};
+}
+
+/* ═══════════ PROCESS ═══════════ */
+function process(rows){
+  if(!rows||!rows.length){toast('⚠ Empty file');return}
+  raw=rows.map(normalize).filter(d=>d.start&&!isNaN(d.start)&&d.agentId);
+  if(!raw.length){toast('⚠ No valid rows found — check column names');return}
+  filtered=[...raw];
+  populateFilters();
+  build();
+  toast(`✅ Loaded ${raw.length.toLocaleString()} records`);
+}
+
+/* ═══════════ FILTER DROPDOWNS ═══════════ */
+function populateFilters(){
+  const agents=[...new Set(raw.map(d=>d.agentId))].sort();
+  const teams=[...new Set(raw.map(d=>d.team))].filter(Boolean).sort();
+  const statuses=[...new Set(raw.map(d=>d.status))].filter(Boolean).sort();
+  const groups=[...new Set(raw.map(d=>d.statusGroup))].filter(Boolean).sort();
+  fillSelect('fAgent',agents);
+  fillSelect('fTeam',teams);
+  fillSelect('fStatus',statuses);
+  fillSelect('fStatusGroup',groups);
+  const dates=raw.map(d=>d.start).sort((a,b)=>a-b);
+  document.getElementById('fFrom').value=toDateInput(dates[0]);
+  document.getElementById('fTo').value=toDateInput(dates[dates.length-1]);
+}
+function fillSelect(id,values){
+  const el=document.getElementById(id);
+  const cur=el.value;
+  el.innerHTML='<option value="">All</option>'+values.map(v=>`<option value="${v}"${v===cur?' selected':''}>${v}</option>`).join('');
+}
+function toDateInput(d){return d?d.toISOString().slice(0,10):''}
+
+/* ═══════════ FILTERS ═══════════ */
+function applyFilters(){
+  const from=document.getElementById('fFrom').value;
+  const to=document.getElementById('fTo').value;
+  const agent=document.getElementById('fAgent').value;
+  const team=document.getElementById('fTeam').value;
+  const status=document.getElementById('fStatus').value;
+  const group=document.getElementById('fStatusGroup').value;
+  filtered=raw.filter(d=>{
+    if(from&&d.start<new Date(from)) return false;
+    if(to&&d.start>new Date(to+'T23:59:59')) return false;
+    if(agent&&d.agentId!==agent) return false;
+    if(team&&d.team!==team) return false;
+    if(status&&d.status!==status) return false;
+    if(group&&d.statusGroup!==group) return false;
+    return true;
+  });
+  build();
+  toast(`🔍 ${filtered.length.toLocaleString()} records`);
+}
+function resetFilters(){
+  filtered=[...raw];
+  document.getElementById('fAgent').value='';
+  document.getElementById('fTeam').value='';
+  document.getElementById('fStatus').value='';
+  document.getElementById('fStatusGroup').value='';
+  populateFilters();
+  build();
+  toast('✅ Filters reset');
+}
+
+/* ═══════════ AGGREGATE HELPERS ═══════════ */
+function sumBy(arr,keyFn,valFn=d=>d.duration){
+  return arr.reduce((acc,d)=>{const k=keyFn(d);acc[k]=(acc[k]||0)+valFn(d);return acc;},{});
+}
+function countBy(arr,keyFn){
+  return arr.reduce((acc,d)=>{const k=keyFn(d);acc[k]=(acc[k]||0)+1;return acc;},{});
+}
+function fmtDur(s){
+  s=Number(s)||0;
+  if(s<60) return s.toFixed(0)+'s';
+  if(s<3600) return (s/60).toFixed(1)+'m';
+  return (s/3600).toFixed(2)+'h';
+}
+function fmtMin(m){
+  m=Number(m)||0;
+  if(m<1) return (m*60).toFixed(0)+'s';
+  if(m<60) return m.toFixed(1)+'m';
+  return (m/60).toFixed(2)+'h';
+}
+
+/* ═══════════ BUILD ALL ═══════════ */
+function build(){
+  if(!filtered.length) return;
+  const statuses=[...new Set(filtered.map(d=>d.status))];
+  buildAgentMatrix(statuses);
+  updateKPIs(statuses);
+  buildOverview(statuses);
+  buildTeamPage(statuses);
+  buildTimePage();
+  buildHeatmaps(statuses);
+  buildTrends(statuses);
+  buildInsights(statuses);
+}
+
+/* ═══════════ AGENT MATRIX ═══════════ */
+let matrixCols=[];
+function buildAgentMatrix(statuses){
+  matrixCols=statuses;
+  const matrix={};
+  filtered.forEach(d=>{
+    if(!matrix[d.agentId])matrix[d.agentId]={};
+    matrix[d.agentId][d.status]=(matrix[d.agentId][d.status]||0)+d.duration;
+  });
+  agentMatrix=Object.entries(matrix).map(([agent,vals])=>{
+    const row={Agent:agent,Total:0};
+    statuses.forEach(s=>{row[s]=vals[s]||0;row.Total+=row[s];});
+    row.Records=filtered.filter(d=>d.agentId===agent).length;
+    const av=vals['available']||0;
+    row['Available%']=row.Total?((av/row.Total)*100).toFixed(1)+'%':'0%';
+    return row;
+  });
+  renderMatrixTable(agentMatrix);
+  buildStackedChart(statuses);
+}
+
+function renderMatrixTable(rows){
+  const headers=['Agent',...matrixCols,'Total','Records','Available%'];
+  const head=`<thead><tr>${headers.map(h=>{
+    const ss=sortState['matrix']||{};
+    const cls=ss.col===h?(ss.dir>0?'sort-asc':'sort-desc'):'';
+    return `<th class="${cls}" onclick="sortTable('matrix','${h}')">${h}<span class="sort-icon"></span></th>`;
+  }).join('')}</tr></thead>`;
+  const body=`<tbody>${rows.map(r=>`
+    <tr>
+      <td class="agent-link" onclick="drillDown('${r.Agent}')">${r.Agent}</td>
+      ${matrixCols.map(s=>`<td>${fmtDur(r[s])}</td>`).join('')}
+      <td><strong>${fmtDur(r.Total)}</strong></td>
+      <td>${r.Records}</td>
+      <td>${r['Available%']}</td>
+    </tr>`).join('')}</tbody>`;
+  document.getElementById('matrixTable').innerHTML=head+body;
+  document.getElementById('matrixCount').textContent=rows.length+' agents';
+}
+
+function filterMatrixTable(){
+  const q=document.getElementById('matrixSearch').value.toLowerCase();
+  renderMatrixTable(agentMatrix.filter(r=>r.Agent.toLowerCase().includes(q)));
+}
+
+function buildStackedChart(statuses){
+  const top15=agentMatrix.sort((a,b)=>b.Total-a.Total).slice(0,15);
+  mkChart('stackChart',{type:'bar',
+    data:{labels:top15.map(r=>r.Agent),
+      datasets:statuses.map((s,i)=>({label:s,data:top15.map(r=>r[s]/60),backgroundColor:PALETTE[i%PALETTE.length]}))},
+    options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true},y:{stacked:true,title:{display:true,text:'Minutes'}}}}
+  });
+}
+
+/* ═══════════ KPIs ═══════════ */
+function updateKPIs(statuses){
+  const agents=new Set(filtered.map(d=>d.agentId)).size;
+  const records=filtered.length;
+  const totalDur=filtered.reduce((s,d)=>s+d.duration,0);
+  const statusMap=sumBy(filtered,d=>d.status);
+  const teamMap=sumBy(filtered,d=>d.team);
+  const hrs=Array(24).fill(0);
+  filtered.forEach(d=>hrs[d.start.getHours()]+=d.duration);
+  const topStatus=Object.entries(statusMap).sort((a,b)=>b[1]-a[1])[0];
+  const topTeam=Object.entries(teamMap).sort((a,b)=>b[1]-a[1])[0];
+  const busiestH=hrs.indexOf(Math.max(...hrs));
+  const dates=filtered.map(d=>d.start.toISOString().slice(0,10));
+  const uniqueDays=new Set(dates).size;
+
+  document.getElementById('kpiAgents').textContent=agents.toLocaleString();
+  document.getElementById('kpiRecords').textContent=records.toLocaleString();
+  document.getElementById('kpiTotalDur').textContent=fmtDur(totalDur);
+  document.getElementById('kpiTotalDurSub').textContent=(totalDur/3600).toFixed(1)+' hours total';
+  document.getElementById('kpiTopStatus').textContent=topStatus?topStatus[0]:'—';
+  document.getElementById('kpiTopStatusPct').textContent=topStatus?((topStatus[1]/totalDur)*100).toFixed(1)+'% of time':'';
+  document.getElementById('kpiBusiestHour').textContent=busiestH+':00';
+  document.getElementById('kpiAvgDur').textContent=fmtDur(totalDur/records);
+  document.getElementById('kpiTopTeam').textContent=topTeam?topTeam[0]:'—';
+  document.getElementById('kpiTopTeamSub').textContent=topTeam?fmtDur(topTeam[1]):'';
+  document.getElementById('kpiDays').textContent=uniqueDays;
+}
+
+/* ═══════════ OVERVIEW CHARTS ═══════════ */
+function buildOverview(statuses){
+  const statusMap=sumBy(filtered,d=>d.status);
+  const labels=Object.keys(statusMap);
+  mkChart('statusPieChart',{type:'doughnut',
+    data:{labels,datasets:[{data:Object.values(statusMap).map(v=>v/60),backgroundColor:palette(labels.length),borderWidth:1,borderColor:'#0b0f18'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:10},color:'#e7ecf6',boxWidth:12}}}}
+  });
+
+  const groupMap=sumBy(filtered,d=>d.statusGroup||'Unknown');
+  const glabels=Object.keys(groupMap);
+  mkChart('statusGroupChart',{type:'pie',
+    data:{labels:glabels,datasets:[{data:Object.values(groupMap).map(v=>v/60),backgroundColor:palette(glabels.length),borderWidth:1,borderColor:'#0b0f18'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:10},color:'#e7ecf6',boxWidth:12}}}}
+  });
+
+  const top10=agentMatrix.sort((a,b)=>b.Total-a.Total).slice(0,10);
+  mkChart('agentBarChart',{type:'bar',
+    data:{labels:top10.map(r=>r.Agent),datasets:[{label:'Total Duration (min)',data:top10.map(r=>r.Total/60),backgroundColor:palette(10)}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',scales:{x:{title:{display:true,text:'Minutes',color:'#9aa5c0'},ticks:{color:'#9aa5c0'}},y:{ticks:{color:'#9aa5c0'}}},plugins:{legend:{display:false}}}
+  });
+
+  // Available vs Not-Available per top agent
+  const avMap=sumBy(filtered.filter(d=>d.status==='available'),d=>d.agentId);
+  const nonAvMap={};
+  filtered.filter(d=>d.status!=='available').forEach(d=>{nonAvMap[d.agentId]=(nonAvMap[d.agentId]||0)+d.duration});
+  const top12=agentMatrix.slice(0,12);
+  mkChart('availStackChart',{type:'bar',
+    data:{labels:top12.map(r=>r.Agent),
+      datasets:[
+        {label:'Available',data:top12.map(r=>(avMap[r.Agent]||0)/60),backgroundColor:'#3be8a6'},
+        {label:'Other',data:top12.map(r=>(nonAvMap[r.Agent]||0)/60),backgroundColor:'#f16e4e'}
+      ]},
+    options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true,ticks:{color:'#9aa5c0'}},y:{stacked:true,title:{display:true,text:'Minutes',color:'#9aa5c0'},ticks:{color:'#9aa5c0'}}}}
+  });
+}
+
+/* ═══════════ TEAM PAGE ═══════════ */
+function buildTeamPage(statuses){
+  const teamDurMap=sumBy(filtered,d=>d.team);
+  const tLabels=Object.keys(teamDurMap);
+  mkChart('teamPieChart',{type:'doughnut',
+    data:{labels:tLabels,datasets:[{data:Object.values(teamDurMap).map(v=>v/60),backgroundColor:palette(tLabels.length),borderWidth:1,borderColor:'#0b0f18'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:10},color:'#e7ecf6',boxWidth:12}}}}
+  });
+
+  const teamStatusData={};
+  filtered.forEach(d=>{
+    if(!teamStatusData[d.team])teamStatusData[d.team]={};
+    teamStatusData[d.team][d.status]=(teamStatusData[d.team][d.status]||0)+d.duration;
+  });
+  const teams=Object.keys(teamStatusData);
+  mkChart('teamStatusChart',{type:'bar',
+    data:{labels:teams,
+      datasets:statuses.slice(0,8).map((s,i)=>({label:s,data:teams.map(t=>(teamStatusData[t][s]||0)/60),backgroundColor:PALETTE[i%PALETTE.length]}))},
+    options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true,ticks:{color:'#9aa5c0'}},y:{stacked:true,ticks:{color:'#9aa5c0'}}}}
+  });
+
+  teamTableRows=teams.map(t=>{
+    const rows=filtered.filter(d=>d.team===t);
+    const totalDur=rows.reduce((s,d)=>s+d.duration,0);
+    const agents=new Set(rows.map(d=>d.agentId)).size;
+    const topStatus=Object.entries(sumBy(rows,d=>d.status)).sort((a,b)=>b[1]-a[1])[0];
+    return{Team:t,'Total Duration':totalDur,'Agents':agents,'Records':rows.length,'Top Status':topStatus?topStatus[0]:'—','Avg/Record':totalDur/rows.length};
+  }).sort((a,b)=>b['Total Duration']-a['Total Duration']);
+  renderTeamTable(teamTableRows);
+}
+
+function renderTeamTable(rows){
+  const head=`<thead><tr>${['Team','Total Duration','Agents','Records','Top Status','Avg/Record'].map(h=>
+    `<th onclick="sortTable('team','${h}')">${h}<span class="sort-icon"></span></th>`).join('')}</tr></thead>`;
+  const body=`<tbody>${rows.map(r=>`<tr>
+    <td>${r.Team}</td><td>${fmtDur(r['Total Duration'])}</td><td>${r.Agents}</td>
+    <td>${r.Records}</td><td>${r['Top Status']}</td><td>${fmtDur(r['Avg/Record'])}</td>
+  </tr>`).join('')}</tbody>`;
+  document.getElementById('teamTable').innerHTML=head+body;
+  document.getElementById('teamCount').textContent=rows.length+' teams';
+}
+function filterTeamTable(){
+  const q=document.getElementById('teamSearch').value.toLowerCase();
+  renderTeamTable(teamTableRows.filter(r=>r.Team.toLowerCase().includes(q)));
+}
+
+/* ═══════════ TIME PAGE ═══════════ */
+function buildTimePage(){
+  const hrs=Array(24).fill(0);
+  const hrsCnt=Array(24).fill(0);
+  filtered.forEach(d=>{const h=d.start.getHours();hrs[h]+=d.duration;hrsCnt[h]++;});
+
+  mkChart('hourChart',{type:'bar',
+    data:{labels:Array.from({length:24},(_,i)=>`${i}:00`),
+      datasets:[{label:'Duration (min)',data:hrs.map(v=>v/60),backgroundColor:hrs.map(v=>{const max=Math.max(...hrs);return `rgba(59,232,166,${0.3+0.7*(v/max)})`})}]},
+    options:{responsive:true,maintainAspectRatio:false,scales:{x:{ticks:{color:'#9aa5c0'}},y:{ticks:{color:'#9aa5c0'},title:{display:true,text:'Minutes',color:'#9aa5c0'}}},plugins:{legend:{display:false}}}
+  });
+
+  // 30-min intervals
+  const intervals={};
+  filtered.forEach(d=>{
+    const h=d.start.getHours();const m=d.start.getMinutes()<30?'00':'30';
+    const key=`${String(h).padStart(2,'0')}:${m}`;
+    intervals[key]=(intervals[key]||0)+d.duration;
+  });
+  const iKeys=Object.keys(intervals).sort();
+  mkChart('intervalChart',{type:'line',
+    data:{labels:iKeys,datasets:[{label:'Duration (min)',data:iKeys.map(k=>intervals[k]/60),borderColor:'#4e9af1',fill:true,backgroundColor:'rgba(78,154,241,0.15)',tension:0.3,pointRadius:2}]},
+    options:{responsive:true,maintainAspectRatio:false,scales:{x:{ticks:{color:'#9aa5c0',maxTicksLimit:12}},y:{ticks:{color:'#9aa5c0'},title:{display:true,text:'Minutes',color:'#9aa5c0'}}}}
+  });
+
+  document.getElementById('hourTable').innerHTML=
+    `<thead><tr><th>Hour</th><th>Total Duration</th><th>Records</th><th>Avg Duration</th><th>Peak Status</th></tr></thead>`+
+    `<tbody>${hrs.map((v,h)=>{
+      const hRows=filtered.filter(d=>d.start.getHours()===h);
+      const peakStatus=hRows.length?Object.entries(sumBy(hRows,d=>d.status)).sort((a,b)=>b[1]-a[1])[0]:'';
+      return `<tr><td>${h}:00</td><td>${fmtDur(v)}</td><td>${hrsCnt[h]}</td><td>${hrsCnt[h]?fmtDur(v/hrsCnt[h]):'—'}</td><td>${peakStatus?peakStatus[0]:'—'}</td></tr>`;
+    }).join('')}</tbody>`;
+}
+
+/* ═══════════ HEATMAPS ═══════════ */
+function buildHeatmaps(statuses){
+  const bubbles=[];
+  statuses.forEach((s,i)=>{
+    for(let h=0;h<24;h++){
+      let total=0;
+      filtered.forEach(d=>{if(d.status===s&&d.start.getHours()===h)total+=d.duration});
+      bubbles.push({x:h,y:i,r:Math.min(Math.sqrt(total/60)/1.5,18)});
+    }
+  });
+  mkChart('heatmapChart',{type:'bubble',
+    data:{datasets:[{label:'Duration',data:bubbles,backgroundColor:'rgba(59,232,166,0.55)'}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{x:{title:{display:true,text:'Hour',color:'#9aa5c0'},min:0,max:23,ticks:{color:'#9aa5c0'}},
+              y:{ticks:{callback:v=>statuses[v]??v,color:'#9aa5c0'}}},plugins:{legend:{display:false}}}
+  });
+
+  const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const dow=[];
+  statuses.forEach((s,i)=>{
+    for(let d=0;d<7;d++){
+      let total=0;
+      filtered.forEach(r=>{if(r.status===s&&r.start.getDay()===d)total+=r.duration});
+      dow.push({x:d,y:i,r:Math.min(Math.sqrt(total/60)/1.5,18)});
+    }
+  });
+  mkChart('dowChart',{type:'bubble',
+    data:{datasets:[{label:'DoW',data:dow,backgroundColor:'rgba(78,154,241,0.55)'}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{x:{title:{display:true,text:'Day',color:'#9aa5c0'},min:0,max:6,ticks:{callback:v=>DAYS[v]??v,color:'#9aa5c0'}},
+              y:{ticks:{callback:v=>statuses[v]??v,color:'#9aa5c0'}}},plugins:{legend:{display:false}}}
+  });
+
+  // Agent × Hour record count heatmap
+  const agents=[...new Set(filtered.map(d=>d.agentId))].slice(0,20);
+  const agHourData=[];
+  agents.forEach((a,i)=>{
+    for(let h=0;h<24;h++){
+      const cnt=filtered.filter(d=>d.agentId===a&&d.start.getHours()===h).length;
+      if(cnt>0) agHourData.push({x:h,y:i,r:Math.min(Math.sqrt(cnt)*2.5,14)});
+    }
+  });
+  mkChart('agentHourHeatmap',{type:'bubble',
+    data:{datasets:[{label:'Records',data:agHourData,backgroundColor:'rgba(241,201,78,0.6)'}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{x:{title:{display:true,text:'Hour',color:'#9aa5c0'},min:0,max:23,ticks:{color:'#9aa5c0'}},
+              y:{ticks:{callback:v=>agents[v]??v,color:'#9aa5c0'}}},plugins:{legend:{display:false}}}
+  });
+}
+
+/* ═══════════ TRENDS ═══════════ */
+function buildTrends(statuses){
+  const dailyMap={};
+  filtered.forEach(d=>{
+    const key=d.start.toISOString().slice(0,10);
+    if(!dailyMap[key])dailyMap[key]={};
+    dailyMap[key][d.status]=(dailyMap[key][d.status]||0)+d.duration;
+  });
+  const dates=Object.keys(dailyMap).sort();
+  const totals=dates.map(date=>Object.values(dailyMap[date]).reduce((a,b)=>a+b,0)/60);
+
+  mkChart('trendChart',{type:'line',
+    data:{labels:dates,datasets:[{label:'Total Duration (min)',data:totals,borderColor:'#3be8a6',fill:true,backgroundColor:'rgba(59,232,166,0.1)',tension:0.3,pointRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,scales:{x:{ticks:{color:'#9aa5c0',maxTicksLimit:10}},y:{ticks:{color:'#9aa5c0'},title:{display:true,text:'Minutes',color:'#9aa5c0'}}}}
+  });
+
+  mkChart('areaChart',{type:'line',
+    data:{labels:dates,
+      datasets:statuses.slice(0,8).map((s,i)=>({label:s,data:dates.map(date=>(dailyMap[date][s]||0)/60),
+        borderColor:PALETTE[i%PALETTE.length],backgroundColor:PALETTE[i%PALETTE.length]+'44',fill:true,tension:0.3,pointRadius:0}))},
+    options:{responsive:true,maintainAspectRatio:false,scales:{x:{ticks:{color:'#9aa5c0',maxTicksLimit:10}},y:{stacked:true,ticks:{color:'#9aa5c0'}}}}
+  });
+
+  // Chat vs Available ratio
+  const chatDayMap={}, availDayMap={};
+  filtered.forEach(d=>{
+    const key=d.start.toISOString().slice(0,10);
+    if(d.status==='chat')chatDayMap[key]=(chatDayMap[key]||0)+d.duration;
+    if(d.status==='available')availDayMap[key]=(availDayMap[key]||0)+d.duration;
+  });
+  mkChart('ratioChart',{type:'bar',
+    data:{labels:dates,
+      datasets:[
+        {label:'Chat',data:dates.map(d=>(chatDayMap[d]||0)/60),backgroundColor:'#3be8a6'},
+        {label:'Available',data:dates.map(d=>(availDayMap[d]||0)/60),backgroundColor:'#4e9af1'}
+      ]},
+    options:{responsive:true,maintainAspectRatio:false,scales:{x:{ticks:{color:'#9aa5c0',maxTicksLimit:10}},y:{ticks:{color:'#9aa5c0'}}}}
+  });
+
+  document.getElementById('trendTable').innerHTML=
+    `<thead><tr><th>Date</th>${statuses.map(s=>`<th>${s}</th>`).join('')}<th>Total</th><th>Records</th></tr></thead>`+
+    `<tbody>${dates.map(date=>{
+      const dayRows=filtered.filter(d=>d.start.toISOString().slice(0,10)===date);
+      const total=dayRows.reduce((s,d)=>s+d.duration,0);
+      return `<tr><td>${date}</td>${statuses.map(s=>`<td>${fmtDur((dailyMap[date][s]||0))}</td>`).join('')}<td><strong>${fmtDur(total)}</strong></td><td>${dayRows.length}</td></tr>`;
+    }).join('')}</tbody>`;
+}
+
+/* ═══════════ INSIGHTS PAGE ═══════════ */
+function buildInsights(statuses){
+  // Rankings table
+  const ranked=[...agentMatrix].sort((a,b)=>b.Total-a.Total);
+  const availIdx=statuses.indexOf('available');
+  document.getElementById('rankTable').innerHTML=
+    `<thead><tr><th>Rank</th><th>Agent</th><th>Total Duration</th><th>Chat Time</th><th>Available Time</th><th>Available%</th><th>Records</th></tr></thead>`+
+    `<tbody>${ranked.slice(0,20).map((r,i)=>`<tr>
+      <td>${i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)}</td>
+      <td class="agent-link" onclick="drillDown('${r.Agent}')">${r.Agent}</td>
+      <td>${fmtDur(r.Total)}</td>
+      <td>${fmtDur(r.chat||0)}</td>
+      <td>${fmtDur(r.available||0)}</td>
+      <td>${r['Available%']}</td>
+      <td>${r.Records}</td>
+    </tr>`).join('')}</tbody>`;
+
+  // Auto insights
+  const totalDur=filtered.reduce((s,d)=>s+d.duration,0);
+  const chatDur=filtered.filter(d=>d.status==='chat').reduce((s,d)=>s+d.duration,0);
+  const availDur=filtered.filter(d=>d.status==='available').reduce((s,d)=>s+d.duration,0);
+  const breakDur=filtered.filter(d=>['break','lunch'].includes(d.status)).reduce((s,d)=>s+d.duration,0);
+  const acrDur=filtered.filter(d=>d.status==='after_contact_work').reduce((s,d)=>s+d.duration,0);
+  const chatPct=totalDur?(chatDur/totalDur*100).toFixed(1):0;
+  const availPct=totalDur?(availDur/totalDur*100).toFixed(1):0;
+  const breakPct=totalDur?(breakDur/totalDur*100).toFixed(1):0;
+  const acrPct=totalDur?(acrDur/totalDur*100).toFixed(1):0;
+  const hrs=Array(24).fill(0);filtered.forEach(d=>hrs[d.start.getHours()]+=d.durationMin);
+  const peakHour=hrs.indexOf(Math.max(...hrs));
+  const topAgent=ranked[0];
+  const bottomAgent=ranked[ranked.length-1];
+
+  const insights=[
+    {icon:'💬',cls:chatPct>40?'ok':'warn-bg',text:`Chat occupies <strong>${chatPct}%</strong> of total time (${fmtDur(chatDur)})`},
+    {icon:'✅',cls:availPct>20?'ok':'warn-bg',text:`Available time is <strong>${availPct}%</strong> of total (${fmtDur(availDur)})`},
+    {icon:'☕',cls:breakPct<15?'ok':'warn-bg',text:`Break/Lunch accounts for <strong>${breakPct}%</strong> (${fmtDur(breakDur)})`},
+    {icon:'📋',cls:acrPct<15?'ok':'warn-bg',text:`After-contact work is <strong>${acrPct}%</strong> (${fmtDur(acrDur)})`},
+    {icon:'⏰',cls:'info-bg',text:`Peak activity hour: <strong>${peakHour}:00–${peakHour+1}:00</strong>`},
+    {icon:'🏆',cls:'ok',text:`Top agent: <strong>${topAgent?.Agent}</strong> with ${fmtDur(topAgent?.Total)} total`},
+    {icon:'📊',cls:'info-bg',text:`<strong>${new Set(filtered.map(d=>d.agentId)).size}</strong> agents active across <strong>${new Set(filtered.map(d=>d.team)).size}</strong> teams`},
+    {icon:'📅',cls:'info-bg',text:`Data spans <strong>${new Set(filtered.map(d=>d.start.toISOString().slice(0,10))).size}</strong> unique days`},
+  ];
+  document.getElementById('insightsList').innerHTML=insights.map(ins=>
+    `<div class="insight-item"><div class="insight-icon ${ins.cls}">${ins.icon}</div><span>${ins.text}</span></div>`
+  ).join('');
+
+  // Efficiency chart — % productive (chat+email+available) per agent
+  const top15=ranked.slice(0,15);
+  const productive=['chat','email','available','email_backlog'];
+  const prodPcts=top15.map(r=>{const prod=productive.reduce((s,st)=>s+(r[st]||0),0);return r.Total?(prod/r.Total*100).toFixed(1):0});
+  mkChart('efficiencyChart',{type:'bar',
+    data:{labels:top15.map(r=>r.Agent),
+      datasets:[{label:'Productive Time %',data:prodPcts,backgroundColor:prodPcts.map(v=>v>70?'#3be8a6':v>50?'#f1c94e':'#f16e4e')}]},
+    options:{responsive:true,maintainAspectRatio:false,scales:{x:{ticks:{color:'#9aa5c0'}},y:{max:100,ticks:{callback:v=>v+'%',color:'#9aa5c0'},title:{display:true,text:'% Productive',color:'#9aa5c0'}}},
+      plugins:{legend:{display:false}}}
+  });
+
+  // Shift pattern — earliest start, latest end, span
+  const shiftData=[];
+  const agentIds=[...new Set(filtered.map(d=>d.agentId))];
+  agentIds.forEach(a=>{
+    const aRows=filtered.filter(d=>d.agentId===a);
+    const starts=aRows.map(d=>d.start.getHours()+d.start.getMinutes()/60);
+    const ends=aRows.filter(d=>d.end).map(d=>d.end.getHours()+d.end.getMinutes()/60);
+    const minStart=Math.min(...starts);const maxEnd=ends.length?Math.max(...ends):0;
+    shiftData.push({Agent:a,'Earliest Start':`${Math.floor(minStart)}:${String(Math.round((minStart%1)*60)).padStart(2,'0')}`,
+      'Latest End':ends.length?`${Math.floor(maxEnd)}:${String(Math.round((maxEnd%1)*60)).padStart(2,'0')}`:'—',
+      'Span (hrs)':(maxEnd-minStart).toFixed(1),'Days Active':new Set(aRows.map(d=>d.start.toISOString().slice(0,10))).size});
+  });
+  document.getElementById('shiftTable').innerHTML=
+    `<thead><tr><th>Agent</th><th>Earliest Start</th><th>Latest End</th><th>Span (hrs)</th><th>Days Active</th></tr></thead>`+
+    `<tbody>${shiftData.sort((a,b)=>b['Days Active']-a['Days Active']).map(r=>`<tr>
+      <td class="agent-link" onclick="drillDown('${r.Agent}')">${r.Agent}</td>
+      <td>${r['Earliest Start']}</td><td>${r['Latest End']}</td>
+      <td>${r['Span (hrs)']}</td><td>${r['Days Active']}</td>
+    </tr>`).join('')}</tbody>`;
+}
+
+/* ═══════════ DRILLDOWN ═══════════ */
+function drillDown(agentId){
+  lastTab=[...pages].findIndex(p=>p.classList.contains('active'));
+  currentDrillAgent=agentId;
+  document.getElementById('agentTitle').innerText=agentId;
+  drillRows=filtered.filter(d=>d.agentId===agentId);
+  const map=sumBy(drillRows,d=>d.status);
+  const labels=Object.keys(map);
+
+  mkChart('drillStatusChart',{type:'doughnut',
+    data:{labels,datasets:[{data:Object.values(map).map(v=>v/60),backgroundColor:palette(labels.length),borderWidth:1,borderColor:'#0b0f18'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:10},color:'#e7ecf6',boxWidth:12}}}}
+  });
+
+  const hrs=Array(24).fill(0);
+  drillRows.forEach(d=>hrs[d.start.getHours()]+=d.duration);
+  mkChart('drillHourChart',{type:'bar',
+    data:{labels:Array.from({length:24},(_,i)=>`${i}:00`),datasets:[{label:'Duration (min)',data:hrs.map(v=>v/60),backgroundColor:'#4e9af1'}]},
+    options:{responsive:true,maintainAspectRatio:false,scales:{x:{ticks:{color:'#9aa5c0'}},y:{ticks:{color:'#9aa5c0'}}},plugins:{legend:{display:false}}}
+  });
+
+  renderDrillTable(drillRows);
+  show(7);
+}
+
+function renderDrillTable(rows){
+  document.getElementById('drillTable').innerHTML=
+    `<thead><tr><th>Date</th><th>Start Time</th><th>End Time</th><th>Status</th><th>Duration</th><th>Team</th></tr></thead>`+
+    `<tbody>${rows.map(d=>`<tr>
+      <td>${d.start.toLocaleDateString()}</td>
+      <td>${d.start.toLocaleTimeString()}</td>
+      <td>${d.end?d.end.toLocaleTimeString():'—'}</td>
+      <td>${d.status}</td>
+      <td>${fmtDur(d.duration)}</td>
+      <td>${d.team}</td>
+    </tr>`).join('')}</tbody>`;
+  document.getElementById('drillCount').textContent=rows.length+' records';
+}
+
+function filterDrillTable(){
+  const q=document.getElementById('drillSearch').value.toLowerCase();
+  renderDrillTable(drillRows.filter(d=>d.status.toLowerCase().includes(q)));
+}
+
+/* ═══════════ SORT ═══════════ */
+function sortTable(key,col){
+  const ss=sortState[key]||{col:null,dir:-1};
+  ss.dir=ss.col===col?ss.dir*-1:-1;ss.col=col;
+  sortState[key]=ss;
+  if(key==='matrix'){
+    agentMatrix.sort((a,b)=>{const va=a[col]??0,vb=b[col]??0;return typeof va==='number'?(vb-va)*ss.dir:String(va).localeCompare(String(vb))*ss.dir});
+    renderMatrixTable(agentMatrix);
+  } else if(key==='team'){
+    teamTableRows.sort((a,b)=>{const va=a[col]??0,vb=b[col]??0;return typeof va==='number'?(vb-va)*ss.dir:String(va).localeCompare(String(vb))*ss.dir});
+    renderTeamTable(teamTableRows);
+  }
+}
+
+/* ═══════════ EXPORTS ═══════════ */
+function exportPage(page){
+  const wb=XLSX.utils.book_new();
+  if(page==='overview'){
+    const sm=sumBy(filtered,d=>d.status);
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(
+      Object.entries(sm).map(([s,v])=>({'Status':s,'Duration_s':v.toFixed(0),'Duration_min':(v/60).toFixed(2),'Duration_h':(v/3600).toFixed(3)}))
+    ),'Status Overview');
+  } else if(page==='matrix'){
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(agentMatrix),'Agent Matrix');
+  } else if(page==='teams'){
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(teamTableRows),'Teams');
+  } else if(page==='time'){
+    const hrs=Array(24).fill(0),cnt=Array(24).fill(0);
+    filtered.forEach(d=>{hrs[d.start.getHours()]+=d.duration;cnt[d.start.getHours()]++;});
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(hrs.map((v,h)=>({'Hour':h+':00','Duration_s':v.toFixed(0),'Duration_min':(v/60).toFixed(2),'Records':cnt[h],'Avg_s':cnt[h]?(v/cnt[h]).toFixed(2):0}))),'Hourly');
+  } else if(page==='heatmap'){
+    const statuses=[...new Set(filtered.map(d=>d.status))];
+    const rows=[];
+    statuses.forEach(s=>{for(let h=0;h<24;h++){let t=0;filtered.forEach(d=>{if(d.status===s&&d.start.getHours()===h)t+=d.duration});rows.push({Status:s,Hour:h,'Duration_min':(t/60).toFixed(2)})}});
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'Heatmap');
+  } else if(page==='trends'){
+    const dm={};filtered.forEach(d=>{const k=d.start.toISOString().slice(0,10);if(!dm[k])dm[k]={};dm[k][d.status]=(dm[k][d.status]||0)+d.duration});
+    const statuses=[...new Set(filtered.map(d=>d.status))];
+    const rows=Object.keys(dm).sort().map(date=>{const row={Date:date};statuses.forEach(s=>{row[s]=(dm[date][s]||0).toFixed(0)});return row});
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'Trends');
+  } else if(page==='insights'){
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(agentMatrix),'Rankings');
+  } else if(page==='drill'){
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(drillRows.map(d=>({Agent:d.agentId,Date:d.start.toLocaleDateString(),Start:d.start.toLocaleTimeString(),End:d.end?d.end.toLocaleTimeString():'',Status:d.status,Duration_s:d.duration.toFixed(0),Duration_min:d.durationMin.toFixed(2),Team:d.team}))),'Drilldown');
+  }
+  XLSX.writeFile(wb,`Report_${page}_${new Date().toISOString().slice(0,10)}.xlsx`);
+  toast('✅ Exported');
+}
+
+function exportAllSheets(){
+  if(!filtered.length){toast('⚠ No data to export');return}
+  const wb=XLSX.utils.book_new();
+  const statuses=[...new Set(filtered.map(d=>d.status))];
+
+  // Sheet 1: Raw filtered data
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(filtered.map(d=>({
+    Agent:d.agentId,Status:d.status,'Status Group':d.statusGroup,Team:d.team,Vendor:d.vendor,
+    Date:d.start.toLocaleDateString(),Start:d.start.toLocaleTimeString(),End:d.end?d.end.toLocaleTimeString():'',
+    Duration_s:d.duration.toFixed(0),Duration_min:d.durationMin.toFixed(2)
+  }))),'Raw Data');
+
+  // Sheet 2: Agent Matrix
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(agentMatrix),'Agent Matrix');
+
+  // Sheet 3: Team Summary
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(teamTableRows),'Teams');
+
+  // Sheet 4: Hourly
+  const hrs=Array(24).fill(0),cnt=Array(24).fill(0);
+  filtered.forEach(d=>{hrs[d.start.getHours()]+=d.duration;cnt[d.start.getHours()]++;});
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(hrs.map((v,h)=>({Hour:h+':00',Duration_min:(v/60).toFixed(2),Records:cnt[h],Avg_min:cnt[h]?(v/cnt[h]/60).toFixed(2):0}))),'Hourly');
+
+  // Sheet 5: Daily Trends
+  const dm={};filtered.forEach(d=>{const k=d.start.toISOString().slice(0,10);if(!dm[k])dm[k]={};dm[k][d.status]=(dm[k][d.status]||0)+d.duration});
+  const trendRows=Object.keys(dm).sort().map(date=>{
+    const row={Date:date};statuses.forEach(s=>{row[s+'_min']=((dm[date][s]||0)/60).toFixed(2)});
+    row.Total_min=(Object.values(dm[date]).reduce((a,b)=>a+b,0)/60).toFixed(2);return row;
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(trendRows),'Daily Trends');
+
+  // Sheet 6: Status Summary
+  const sm=sumBy(filtered,d=>d.status);
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(Object.entries(sm).map(([s,v])=>({Status:s,Duration_s:v.toFixed(0),Duration_min:(v/60).toFixed(2),Duration_h:(v/3600).toFixed(3),Records:filtered.filter(d=>d.status===s).length}))),'Status Summary');
+
+  XLSX.writeFile(wb,`Full_Agent_Report_${new Date().toISOString().slice(0,10)}.xlsx`);
+  toast('✅ Full report exported (6 sheets)');
+}
+
+/* ═══════════ TOAST ═══════════ */
+let toastTimer;
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),3500);
+}
+</script>
+</body>
+</html>

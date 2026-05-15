@@ -24,11 +24,14 @@ public class HelloApplication extends Application {
         // Loads the table layout from the resources/views folder.
         FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("views/hello-view.fxml"));
 
-        // Creates a wider scene so all CSV columns can be viewed comfortably.
-        Scene scene = new Scene(fxmlLoader.load(), 1200, 650);
+        // Creates a wider scene for all 3 documented operational modules.
+        Scene scene = new Scene(fxmlLoader.load(), 1500, 820);
+        scene.getStylesheets().add(
+                HelloApplication.class.getResource("views/dashboard.css").toExternalForm()
+        );
 
-        // Shows a title that describes what this screen displays.
-        stage.setTitle("CSV Data Table");
+        // Shows the dashboard scope from the operations documentation.
+        stage.setTitle("WFM Dashboard - Modules 1-3");
 
         // Attaches the scene to the JavaFX stage.
         stage.setScene(scene);

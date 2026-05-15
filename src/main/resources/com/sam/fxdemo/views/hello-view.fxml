@@ -2,31 +2,174 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<!-- Main layout for the CSV table screen. -->
-<VBox spacing="12.0" xmlns:fx="http://javafx.com/fxml"
+<HBox styleClass="app-shell" xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.sam.fxdemo.HelloController">
-    <!-- Adds consistent spacing around the table view. -->
-    <padding>
-        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
-    </padding>
+    <VBox prefWidth="220.0" styleClass="sidebar">
+        <padding>
+            <Insets bottom="22.0" left="22.0" right="22.0" top="22.0"/>
+        </padding>
+        <Label styleClass="brand-label" text="WFM AI"/>
+        <VBox spacing="10.0" styleClass="nav-group">
+            <Button fx:id="dashboardNavButton" onAction="#onDashboardNavClick" styleClass="nav-button" text="Dashboard"/>
+            <Button fx:id="analyticsNavButton" onAction="#onAnalyticsNavClick" styleClass="nav-button" text="Agent Analytics"/>
+            <Button fx:id="leaveNavButton" onAction="#onLeaveNavClick" styleClass="nav-button" text="Leave Management"/>
+            <Button fx:id="shrinkageNavButton" onAction="#onShrinkageNavClick" styleClass="nav-button" text="Shrinkage"/>
+        </VBox>
+        <Region VBox.vgrow="ALWAYS"/>
+        <Label fx:id="statusLabel" styleClass="sidebar-note" text="No CSV file selected." wrapText="true"/>
+    </VBox>
 
-    <!-- Groups the upload button and current CSV loading status. -->
-    <HBox alignment="CENTER_LEFT" spacing="12.0">
-        <!-- Opens the file chooser so the user can upload a CSV file. -->
-        <Button fx:id="uploadButton" text="Upload CSV" onAction="#onUploadButtonClick"/>
+    <VBox spacing="18.0" styleClass="workspace" HBox.hgrow="ALWAYS">
+        <padding>
+            <Insets bottom="20.0" left="28.0" right="28.0" top="18.0"/>
+        </padding>
 
-        <!-- Shows the selected file status and row count. -->
-        <Label fx:id="statusLabel" text="No CSV file selected."/>
+        <HBox alignment="CENTER_LEFT" spacing="18.0">
+            <Label styleClass="workspace-title" text="AI Workforce Intelligence Platform"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="uploadButton" onAction="#onUploadButtonClick" styleClass="action-button" text="Upload CSV"/>
+            <Button fx:id="apiStatusButton" onAction="#onApiStatusButtonClick" styleClass="ghost-button" text="Check API"/>
+        </HBox>
 
-        <Button fx:id="apiStatusButton" text="Check API" onAction="#onApiStatusButtonClick"/>
-        <Label fx:id="apiStatusLabel" text="FastAPI: starting"/>
-    </HBox>
+        <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="toolbar-card">
+            <VBox spacing="4.0">
+                <Label styleClass="toolbar-label" text="DATE"/>
+                <ComboBox fx:id="dateFilterCombo" prefWidth="160.0"/>
+            </VBox>
+            <VBox spacing="4.0">
+                <Label styleClass="toolbar-label" text="TEAM"/>
+                <ComboBox fx:id="teamFilterCombo" prefWidth="260.0"/>
+            </VBox>
+            <VBox spacing="4.0">
+                <Label styleClass="toolbar-label" text="AGENT"/>
+                <ComboBox fx:id="agentFilterCombo" prefWidth="220.0"/>
+            </VBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <VBox alignment="CENTER_RIGHT" spacing="4.0">
+                <Label styleClass="toolbar-label" text="API STATUS"/>
+                <Label fx:id="apiStatusLabel" styleClass="toolbar-value" text="FastAPI: starting"/>
+            </VBox>
+        </HBox>
 
-    <!-- Displays the CSV rows and columns created dynamically by the controller. -->
-    <TableView fx:id="csvTable" prefHeight="580.0" prefWidth="1160.0"/>
-</VBox>
+        <FlowPane hgap="16.0" vgap="16.0">
+            <VBox prefWidth="150.0" styleClass="metric-card">
+                <Label styleClass="metric-label" text="Coverage"/>
+                <Label fx:id="coverageValueLabel" styleClass="metric-value" text="0.0%"/>
+            </VBox>
+            <VBox prefWidth="150.0" styleClass="metric-card">
+                <Label styleClass="metric-label" text="Shrinkage"/>
+                <Label fx:id="shrinkageValueLabel" styleClass="metric-value" text="0.0%"/>
+            </VBox>
+            <VBox prefWidth="150.0" styleClass="metric-card">
+                <Label styleClass="metric-label" text="Occupancy"/>
+                <Label fx:id="occupancyValueLabel" styleClass="metric-value" text="0.0%"/>
+            </VBox>
+            <VBox prefWidth="150.0" styleClass="metric-card">
+                <Label styleClass="metric-label" text="Agents"/>
+                <Label fx:id="agentsValueLabel" styleClass="metric-value" text="0"/>
+            </VBox>
+            <VBox prefWidth="150.0" styleClass="metric-card">
+                <Label styleClass="metric-label" text="SLA Risk"/>
+                <Label fx:id="slaRiskValueLabel" styleClass="metric-value" text="Low"/>
+            </VBox>
+        </FlowPane>
+
+        <StackPane VBox.vgrow="ALWAYS">
+            <VBox fx:id="dashboardPage" spacing="16.0">
+                <HBox spacing="16.0" VBox.vgrow="ALWAYS">
+                    <VBox spacing="10.0" styleClass="content-card" HBox.hgrow="ALWAYS">
+                        <HBox alignment="CENTER_LEFT">
+                            <Label styleClass="card-title" text="Coverage Trends"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Button onAction="#onExportCoverageTrendClick" styleClass="card-button" text="Download"/>
+                        </HBox>
+                        <TableView fx:id="coverageTrendTable" prefHeight="260.0" VBox.vgrow="ALWAYS"/>
+                    </VBox>
+                    <VBox spacing="10.0" styleClass="content-card" HBox.hgrow="ALWAYS">
+                        <HBox alignment="CENTER_LEFT">
+                            <Label styleClass="card-title" text="Shrinkage Analysis"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Button onAction="#onExportShrinkageAnalysisClick" styleClass="card-button" text="Download"/>
+                        </HBox>
+                        <TableView fx:id="shrinkageAnalysisTable" prefHeight="260.0" VBox.vgrow="ALWAYS"/>
+                    </VBox>
+                </HBox>
+                <HBox spacing="16.0" VBox.vgrow="ALWAYS">
+                    <VBox spacing="10.0" styleClass="content-card" HBox.hgrow="ALWAYS">
+                        <HBox alignment="CENTER_LEFT">
+                            <Label styleClass="card-title" text="Live Agent Monitoring"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Button onAction="#onExportLiveMonitoringClick" styleClass="card-button" text="Download"/>
+                        </HBox>
+                        <TableView fx:id="liveMonitoringTable" prefHeight="260.0" VBox.vgrow="ALWAYS"/>
+                    </VBox>
+                    <VBox spacing="10.0" styleClass="content-card" HBox.hgrow="ALWAYS">
+                        <HBox alignment="CENTER_LEFT">
+                            <Label styleClass="card-title" text="AI Recommendations"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Button onAction="#onExportRecommendationsClick" styleClass="card-button" text="Download"/>
+                        </HBox>
+                        <ListView fx:id="recommendationsList" prefHeight="260.0" VBox.vgrow="ALWAYS"/>
+                    </VBox>
+                </HBox>
+            </VBox>
+
+            <VBox fx:id="analyticsPage" spacing="16.0" visible="false" managed="false">
+                <VBox spacing="10.0" styleClass="content-card">
+                    <HBox alignment="CENTER_LEFT" spacing="10.0">
+                        <Label styleClass="card-title" text="Individual Agent Reports"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button onAction="#onExportSelectedAgentClick" styleClass="card-button" text="Download Selected Agent"/>
+                        <Button onAction="#onExportAgentReportClick" styleClass="card-button" text="Download All Agent Reports"/>
+                    </HBox>
+                    <Label fx:id="agentReportNoteLabel" styleClass="content-note" wrapText="true"/>
+                    <TableView fx:id="agentReportTable" prefHeight="240.0" VBox.vgrow="ALWAYS"/>
+                </VBox>
+                <VBox spacing="10.0" styleClass="content-card" VBox.vgrow="ALWAYS">
+                    <HBox alignment="CENTER_LEFT">
+                        <Label styleClass="card-title" text="Working Hours Detail"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button onAction="#onExportWorkingHoursClick" styleClass="card-button" text="Download"/>
+                    </HBox>
+                    <TableView fx:id="workingHoursTable" prefHeight="320.0" VBox.vgrow="ALWAYS"/>
+                </VBox>
+            </VBox>
+
+            <VBox fx:id="leavePage" spacing="16.0" visible="false" managed="false">
+                <VBox spacing="10.0" styleClass="content-card" VBox.vgrow="ALWAYS">
+                    <HBox alignment="CENTER_LEFT">
+                        <Label styleClass="card-title" text="Leave Coverage Reports"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button onAction="#onExportLeaveCoverageClick" styleClass="card-button" text="Download"/>
+                    </HBox>
+                    <Label fx:id="leaveNoteLabel" styleClass="content-note" wrapText="true"/>
+                    <TableView fx:id="leaveCoverageTable" prefHeight="560.0" VBox.vgrow="ALWAYS"/>
+                </VBox>
+            </VBox>
+
+            <VBox fx:id="shrinkagePage" spacing="16.0" visible="false" managed="false">
+                <VBox spacing="10.0" styleClass="content-card" VBox.vgrow="ALWAYS">
+                    <HBox alignment="CENTER_LEFT">
+                        <Label styleClass="card-title" text="Shrinkage Reports"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button onAction="#onExportShrinkageTableClick" styleClass="card-button" text="Download"/>
+                    </HBox>
+                    <Label fx:id="shrinkageNoteLabel" styleClass="content-note" wrapText="true"/>
+                    <TableView fx:id="shrinkageTable" prefHeight="560.0" VBox.vgrow="ALWAYS"/>
+                </VBox>
+            </VBox>
+        </StackPane>
+    </VBox>
+</HBox>
