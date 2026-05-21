@@ -10,6 +10,8 @@
     -fx-background-color: #ffffff;
     -fx-border-color: #dce3ef;
     -fx-border-width: 0 1 0 0;
+    -fx-min-width: 220;
+    -fx-max-width: 220;
 }
 
 .brand-label {
@@ -32,6 +34,7 @@
     -fx-padding: 12 16 12 16;
     -fx-alignment: CENTER_LEFT;
     -fx-cursor: hand;
+    -fx-max-width: infinity;
 }
 
 .nav-button-active {

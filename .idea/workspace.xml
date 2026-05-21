@@ -5,12 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="de891ace-1fc1-4312-90ec-7ae7bc007dda" name="Changes" comment="Uncomment apiStatusButton in HelloController for UI functionality">
-      <change afterPath="$PROJECT_DIR$/Agent_Breakdown_140426.csv" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Documentation.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/test2.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/sam/fxdemo/HelloApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/sam/fxdemo/HelloApplication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Agent_Breakdown_140426.csv" beforeDir="false" afterPath="$PROJECT_DIR$/Agent_Breakdown_140426.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/sam/fxdemo/HelloController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/sam/fxdemo/HelloController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/sam/fxdemo/api/FastApiServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/sam/fxdemo/api/FastApiServer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/com/sam/fxdemo/views/dashboard.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/sam/fxdemo/views/dashboard.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/com/sam/fxdemo/views/hello-view.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/sam/fxdemo/views/hello-view.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -21,7 +22,7 @@
   <component name="CopilotChats">
     <option name="panelChat">
       <chat>
-        <option name="activeSessionId" value="f631adf1-cb86-40c2-a1f2-624813403ad1" />
+        <option name="activeSessionId" value="beab1b42-54b6-431a-b3d8-973430b119c2" />
         <option name="sessions">
           <session>
             <option name="chatType" value="PANEL" />
@@ -50,27 +51,27 @@
     </persistenceIdMap>
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="24" />
+    <option name="cachedIndexableFilesCount" value="39" />
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "samthedazzler"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;samthedazzler&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/samthedazzler/FxDemo.git",
-    "accountId": "c5bc5ea0-ea0e-4185-8e9c-58538e530431"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/samthedazzler/FxDemo.git&quot;,
+    &quot;accountId&quot;: &quot;c5bc5ea0-ea0e-4185-8e9c-58538e530431&quot;
   }
-}]]></component>
-  <component name="KubernetesApiPersistence"><![CDATA[{}]]></component>
-  <component name="KubernetesApiProvider"><![CDATA[{
-  "isMigrated": true
-}]]></component>
+}</component>
+  <component name="KubernetesApiPersistence">{}</component>
+  <component name="KubernetesApiProvider">{
+  &quot;isMigrated&quot;: true
+}</component>
   <component name="MavenImportPreferences">
     <option name="generalSettings">
       <MavenGeneralSettings>
@@ -82,13 +83,72 @@
     <commands />
     <urls />
   </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="2.0054170676450394" />
+      <entry key="MS500" value="3.3760083826334135" />
+      <entry key="S2" value="4.877428786150045" />
+      <entry key="S5" value="11.795144459751972" />
+      <entry key="S10" value="25.53667553290899" />
+      <entry key="S30" value="55.27544030742292" />
+      <entry key="S60" value="69.88102966028328" />
+      <entry key="M2" value="82.91077301925752" />
+      <entry key="M5" value="107.2774053429369" />
+      <entry key="M10" value="126.02472280853699" />
+      <entry key="M15" value="134.64873691938595" />
+      <entry key="M30" value="144.8674025040812" />
+      <entry key="H1" value="150.6721363615494" />
+      <entry key="H2" value="153.76765773809754" />
+      <entry key="H4" value="155.36633355452804" />
+      <entry key="D1" value="156.7252582859337" />
+      <entry key="W1" value="156.96069039220797" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="0.0" />
+      <entry key="S5" value="0.0" />
+      <entry key="S10" value="0.0" />
+      <entry key="S30" value="0.0" />
+      <entry key="S60" value="0.0" />
+      <entry key="M2" value="0.0" />
+      <entry key="M5" value="0.0" />
+      <entry key="M10" value="0.0" />
+      <entry key="M15" value="0.0" />
+      <entry key="M30" value="0.0" />
+      <entry key="H1" value="0.0" />
+      <entry key="H2" value="0.0" />
+      <entry key="H4" value="0.0" />
+      <entry key="D1" value="0.0" />
+      <entry key="W1" value="0.0" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="1.770501285693535" />
+      <entry key="MS500" value="3.280783782558556" />
+      <entry key="S2" value="4.847413036390477" />
+      <entry key="S5" value="11.774311969831043" />
+      <entry key="S10" value="25.515279338132274" />
+      <entry key="S30" value="55.259465302512616" />
+      <entry key="S60" value="69.8707934803058" />
+      <entry key="M2" value="82.90466267990523" />
+      <entry key="M5" value="107.27423257775882" />
+      <entry key="M10" value="126.02285639266489" />
+      <entry key="M15" value="134.64740665992448" />
+      <entry key="M30" value="144.86668638919147" />
+      <entry key="H1" value="150.67176381250664" />
+      <entry key="H2" value="153.767467598068" />
+      <entry key="H4" value="155.36623748614562" />
+      <entry key="D1" value="156.7252421330785" />
+      <entry key="W1" value="156.9606880811558" />
+    </decayedShown>
+  </component>
   <component name="ProblemsViewState">
     <option name="selectedTabId" value="CurrentFile" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "customColor": "",
-  "associatedIndex": 4
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 4
+}</component>
   <component name="ProjectId" id="3DharCS5MH3e505B1oYa6PceehY" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -97,6 +157,7 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Application.Unnamed.executor": "Run",
+    "Application.fxdemo.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.MCP Project settings loaded": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
@@ -104,13 +165,18 @@
     "RunOnceActivity.cidr.known.project.marker": "true",
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "cidr.known.project.marker": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
     "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
     "git-widget-placeholder": "master",
     "ignore.virus.scanning.warn.message": "true",
     "junie.onboarding.icon.badge.shown": "true",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "E:/Project/Ajentic Ir/Agentic IR frontEnd/FxDemo",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
     "project.structure.last.edited": "SDKs",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.2",
@@ -122,9 +188,12 @@
     <key name="CopyFile.RECENT_KEYS">
       <recent name="E:\Project\Ajentic Ir\Agentic IR frontEnd\FxDemo" />
     </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="E:\Project\Ajentic Ir\Agentic IR frontEnd\FxDemo\backend\app" />
+    </key>
   </component>
   <component name="RunManager">
-    <configuration name="Unnamed" type="Application" factoryName="Application" nameIsGenerated="true">
+    <configuration name="fxdemo" type="Application" factoryName="Application">
       <option name="MAIN_CLASS_NAME" value="com.sam.fxdemo.Launcher" />
       <module name="FxDemo" />
       <method v="2">
@@ -135,7 +204,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-30f59d01ecdd-2fc7cc6b9a17-intellij.indexing.shared.core-IU-253.33514.17" />
+        <option value="bundled-jdk-30f59d01ecdd-37e91769500f-intellij.indexing.shared.core-IU-261.24374.151" />
+        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-IU-261.24374.151" />
       </set>
     </attachedChunks>
   </component>
@@ -174,6 +244,9 @@
     <option name="localTasksCounter" value="4" />
     <servers />
   </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
       <map>
@@ -190,6 +263,10 @@
     <MESSAGE value="Refactor FXML layout and update controller for improved UI consistency" />
     <MESSAGE value="Uncomment apiStatusButton in HelloController for UI functionality" />
     <option name="LAST_COMMIT_MESSAGE" value="Uncomment apiStatusButton in HelloController for UI functionality" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
   <component name="github-copilot-workspace">
     <instructionFileLocations>

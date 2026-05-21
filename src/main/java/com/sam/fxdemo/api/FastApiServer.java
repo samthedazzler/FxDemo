@@ -7,8 +7,11 @@ import java.time.Duration;
 
 public class FastApiServer implements AutoCloseable {
     private static final Path PROJECT_ROOT = Path.of("").toAbsolutePath();
-    private static final Path WINDOWS_VENV_PYTHON = PROJECT_ROOT.resolve(".venv").resolve("Scripts").resolve("python.exe");
-    private static final Path POSIX_VENV_PYTHON = PROJECT_ROOT.resolve(".venv").resolve("bin").resolve("python");
+    private static final Path EMBEDDED_PYTHON =
+            PROJECT_ROOT
+                    .resolve("backend")
+                    .resolve("python")
+                    .resolve("python.exe");
 
     private final FastApiClient client = new FastApiClient();
     private Process process;
@@ -22,13 +25,15 @@ public class FastApiServer implements AutoCloseable {
                 resolvePythonCommand(),
                 "-m",
                 "uvicorn",
-                "backend.main:app",
+                "app.main:app",
                 "--host",
                 "127.0.0.1",
                 "--port",
                 "8000"
         );
-        processBuilder.directory(PROJECT_ROOT.toFile());
+        processBuilder.directory(
+                PROJECT_ROOT.resolve("backend").toFile()
+        );
         processBuilder.redirectErrorStream(true);
         processBuilder.redirectOutput(ProcessBuilder.Redirect.appendTo(PROJECT_ROOT.resolve("fastapi.log").toFile()));
 
@@ -90,14 +95,14 @@ public class FastApiServer implements AutoCloseable {
     }
 
     private String resolvePythonCommand() {
-        if (Files.isRegularFile(WINDOWS_VENV_PYTHON)) {
-            return WINDOWS_VENV_PYTHON.toString();
+
+        if (Files.isRegularFile(EMBEDDED_PYTHON)) {
+            return EMBEDDED_PYTHON.toString();
         }
 
-        if (Files.isRegularFile(POSIX_VENV_PYTHON)) {
-            return POSIX_VENV_PYTHON.toString();
-        }
-
-        return "python";
+        throw new RuntimeException(
+                "Embedded Python not found: "
+                        + EMBEDDED_PYTHON
+        );
     }
 }

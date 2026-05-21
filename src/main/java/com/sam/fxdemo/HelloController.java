@@ -218,14 +218,22 @@ public class HelloController {
     private void onExportSelectedAgentClick() {
         String selectedAgent = agentFilterCombo.getValue();
         if (selectedAgent == null || ALL_AGENTS.equals(selectedAgent)) {
-            statusLabel.setText("Select an agent to export an individual report.");
+            AgentReportSnapshot selectedRow = agentReportTable.getSelectionModel().getSelectedItem();
+            if (selectedRow != null) {
+                selectedAgent = selectedRow.agentId();
+            }
+        }
+
+        if (selectedAgent == null || ALL_AGENTS.equals(selectedAgent)) {
+            statusLabel.setText("Select an agent from the dropdown or click a row in the table to export.");
             return;
         }
 
+        final String finalAgentId = selectedAgent;
         List<AgentReportSnapshot> selected = filteredAgentReports.stream()
-                .filter(snapshot -> snapshot.agentId().equals(selectedAgent))
+                .filter(snapshot -> snapshot.agentId().equals(finalAgentId))
                 .toList();
-        exportCsv(selectedAgent + "_report.csv", selected, snapshot -> List.of(
+        exportCsv(finalAgentId + "_report.csv", selected, snapshot -> List.of(
                 snapshot.agentId(),
                 snapshot.teamName(),
                 hoursFormat.format(snapshot.trackedHours()),
@@ -264,12 +272,12 @@ public class HelloController {
     private void updateApiStatus() {
         try {
             boolean healthy = fastApiClient.isHealthy();
-            apiStatusLabel.setText(healthy ? "FastAPI: running" : "FastAPI: unavailable");
+            apiStatusLabel.setText(healthy ? "Connected" : "Not Connected");
         } catch (IOException | InterruptedException exception) {
             if (exception instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
             }
-            apiStatusLabel.setText("FastAPI: unavailable");
+            apiStatusLabel.setText("Not Connected");
         }
     }
 
@@ -369,6 +377,15 @@ public class HelloController {
     }
 
     private void updateTopCards() {
+        if (filteredLeaveCoverage.isEmpty() && filteredWorkingHours.isEmpty()) {
+            coverageValueLabel.setText("0.0%");
+            shrinkageValueLabel.setText("0.0%");
+            occupancyValueLabel.setText("0.0%");
+            agentsValueLabel.setText("0");
+            slaRiskValueLabel.setText("-");
+            return;
+        }
+
         coverageValueLabel.setText(percentFormat.format(filteredLeaveCoverage.stream()
                 .mapToDouble(LeaveCoverageSnapshot::projectedCoveragePercent)
                 .average().orElse(0.0)) + "%");
@@ -599,7 +616,7 @@ public class HelloController {
         shrinkageValueLabel.setText("0.0%");
         occupancyValueLabel.setText("0.0%");
         agentsValueLabel.setText("0");
-        slaRiskValueLabel.setText("Low");
+        slaRiskValueLabel.setText("-");
         agentReportNoteLabel.setText("Select an agent to export an individual report.");
         leaveNoteLabel.setText("Coverage reports will appear here after upload.");
         shrinkageNoteLabel.setText("Shrinkage reports will appear here after upload.");

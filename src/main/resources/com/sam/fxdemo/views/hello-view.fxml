@@ -16,16 +16,16 @@
 
 <HBox styleClass="app-shell" xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.sam.fxdemo.HelloController">
-    <VBox prefWidth="220.0" styleClass="sidebar">
+    <VBox prefWidth="220.0" minWidth="220.0" maxWidth="220.0" styleClass="sidebar">
         <padding>
             <Insets bottom="22.0" left="22.0" right="22.0" top="22.0"/>
         </padding>
         <Label styleClass="brand-label" text="WFM AI"/>
         <VBox spacing="10.0" styleClass="nav-group">
-            <Button fx:id="dashboardNavButton" onAction="#onDashboardNavClick" styleClass="nav-button" text="Dashboard"/>
-            <Button fx:id="analyticsNavButton" onAction="#onAnalyticsNavClick" styleClass="nav-button" text="Agent Analytics"/>
-            <Button fx:id="leaveNavButton" onAction="#onLeaveNavClick" styleClass="nav-button" text="Leave Management"/>
-            <Button fx:id="shrinkageNavButton" onAction="#onShrinkageNavClick" styleClass="nav-button" text="Shrinkage"/>
+            <Button fx:id="dashboardNavButton" onAction="#onDashboardNavClick" styleClass="nav-button" text="Dashboard" maxWidth="1.7976931348623157E308"/>
+            <Button fx:id="analyticsNavButton" onAction="#onAnalyticsNavClick" styleClass="nav-button" text="Agent Analytics" maxWidth="1.7976931348623157E308"/>
+            <Button fx:id="leaveNavButton" onAction="#onLeaveNavClick" styleClass="nav-button" text="Leave Management" maxWidth="1.7976931348623157E308"/>
+            <Button fx:id="shrinkageNavButton" onAction="#onShrinkageNavClick" styleClass="nav-button" text="Shrinkage" maxWidth="1.7976931348623157E308"/>
         </VBox>
         <Region VBox.vgrow="ALWAYS"/>
         <Label fx:id="statusLabel" styleClass="sidebar-note" text="No CSV file selected." wrapText="true"/>
@@ -59,7 +59,7 @@
             <Region HBox.hgrow="ALWAYS"/>
             <VBox alignment="CENTER_RIGHT" spacing="4.0">
                 <Label styleClass="toolbar-label" text="API STATUS"/>
-                <Label fx:id="apiStatusLabel" styleClass="toolbar-value" text="FastAPI: starting"/>
+                <Label fx:id="apiStatusLabel" styleClass="toolbar-value" text="Not Connected"/>
             </VBox>
         </HBox>
 
