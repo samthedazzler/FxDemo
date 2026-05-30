@@ -6,9 +6,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -17,6 +20,28 @@ import java.util.Map;
 // Loads the agent breakdown CSV into normalized activity records shared by all modules.
 public class AgentDatasetLoader {
     private static final DateTimeFormatter CSV_DATE_TIME = DateTimeFormatter.ofPattern("M/d/yyyy h:mm:ss a", Locale.US);
+
+    public List<AgentActivityRecord> loadDirectory(Path dataDirectory) throws IOException {
+        if (!Files.isDirectory(dataDirectory)) {
+            return List.of();
+        }
+
+        List<File> csvFiles;
+        try (var stream = Files.list(dataDirectory)) {
+            csvFiles = stream
+                    .filter(Files::isRegularFile)
+                    .filter(path -> path.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".csv"))
+                    .sorted(Comparator.comparing(path -> path.getFileName().toString()))
+                    .map(Path::toFile)
+                    .toList();
+        }
+
+        List<AgentActivityRecord> records = new ArrayList<>();
+        for (File csvFile : csvFiles) {
+            records.addAll(load(csvFile));
+        }
+        return records;
+    }
 
     public List<AgentActivityRecord> load(File csvFile) throws IOException {
         List<AgentActivityRecord> records = new ArrayList<>();

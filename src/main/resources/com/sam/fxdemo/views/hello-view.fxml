@@ -7,169 +7,359 @@
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TableView?>
-<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Priority?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<HBox styleClass="app-shell" xmlns:fx="http://javafx.com/fxml"
+<VBox styleClass="app-shell" xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.sam.fxdemo.HelloController">
-    <VBox prefWidth="220.0" minWidth="220.0" maxWidth="220.0" styleClass="sidebar">
+    <HBox styleClass="top-bar">
         <padding>
-            <Insets bottom="22.0" left="22.0" right="22.0" top="22.0"/>
+            <Insets bottom="10.0" left="18.0" right="18.0" top="14.0"/>
         </padding>
-        <Label styleClass="brand-label" text="WFM AI"/>
-        <VBox spacing="10.0" styleClass="nav-group">
-            <Button fx:id="dashboardNavButton" onAction="#onDashboardNavClick" styleClass="nav-button" text="Dashboard" maxWidth="1.7976931348623157E308"/>
-            <Button fx:id="analyticsNavButton" onAction="#onAnalyticsNavClick" styleClass="nav-button" text="Agent Analytics" maxWidth="1.7976931348623157E308"/>
-            <Button fx:id="leaveNavButton" onAction="#onLeaveNavClick" styleClass="nav-button" text="Leave Management" maxWidth="1.7976931348623157E308"/>
-            <Button fx:id="shrinkageNavButton" onAction="#onShrinkageNavClick" styleClass="nav-button" text="Shrinkage" maxWidth="1.7976931348623157E308"/>
+        <HBox alignment="CENTER_LEFT" spacing="12.0" prefWidth="300.0">
+            <Label styleClass="brand-mark" text="WFM"/>
+            <VBox spacing="1.0">
+                <Label styleClass="brand-title" text="WFM Platform"/>
+                <Label styleClass="brand-subtitle" text="Workforce Management Ecosystem"/>
+            </VBox>
+        </HBox>
+        <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="search-box" HBox.hgrow="ALWAYS">
+            <Label styleClass="search-icon" text="Search"/>
+            <Label styleClass="search-text" text="Search for modules, reports, users, settings..."/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label styleClass="keycap" text="Ctrl + K"/>
+        </HBox>
+        <Region minWidth="18.0"/>
+        <Button styleClass="assistant-button" text="AI Assistant"/>
+        <Button styleClass="top-icon-button" text="Alerts 12"/>
+        <Button styleClass="top-icon-button" text="Chat"/>
+        <Button styleClass="top-icon-button" text="Help"/>
+        <Button styleClass="top-icon-button" text="Settings"/>
+        <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="profile-chip">
+            <Label styleClass="avatar" text="JD"/>
+            <VBox spacing="0.0">
+                <Label styleClass="profile-name" text="John Doe"/>
+                <Label styleClass="profile-role" text="WFM Admin"/>
+            </VBox>
+        </HBox>
+    </HBox>
+
+    <HBox VBox.vgrow="ALWAYS">
+        <VBox prefWidth="226.0" minWidth="226.0" maxWidth="226.0" styleClass="sidebar">
+            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="nav-scroll" VBox.vgrow="ALWAYS">
+                <VBox spacing="7.0" styleClass="nav-content">
+                    <Label styleClass="nav-section" text="CORE OPERATIONS"/>
+                    <Button fx:id="dashboardNavButton" onAction="#onDashboardNavClick" styleClass="nav-button" text="WFM Dashboard"/>
+                    <Button styleClass="nav-button" text="Forecast Studio"/>
+                    <Button styleClass="nav-button" text="Capacity Planner"/>
+                    <Button styleClass="nav-button" text="Schedule Builder"/>
+                    <Button styleClass="nav-button" text="RTM Console"/>
+                    <Button styleClass="nav-button" text="Routing Manager"/>
+                    <Button fx:id="leaveNavButton" onAction="#onLeaveNavClick" styleClass="nav-button" text="Leave Planner"/>
+                    <Button styleClass="nav-button" text="GM Estimator"/>
+
+                    <Region styleClass="nav-divider"/>
+                    <Label styleClass="nav-section" text="ANALYTICS &amp; REPORTING"/>
+                    <Button styleClass="nav-button" text="Reports Centre"/>
+                    <Button fx:id="analyticsNavButton" onAction="#onAnalyticsNavClick" styleClass="nav-button" text="Historical Analytics"/>
+                    <Button styleClass="nav-button" text="Enterprise Reporting"/>
+                    <Button styleClass="nav-button" text="Realtime Visualization"/>
+                    <Button styleClass="nav-button" text="Playback Module"/>
+
+                    <Region styleClass="nav-divider"/>
+                    <Label styleClass="nav-section" text="OPERATIONS &amp; FINANCE"/>
+                    <Button styleClass="nav-button" text="Operations Module"/>
+                    <Button styleClass="nav-button" text="Finance Module"/>
+                    <Button styleClass="nav-button" text="Approval Workflow"/>
+                    <Button styleClass="nav-button" text="Cross-Department Feed"/>
+                    <Button styleClass="nav-button" text="Escalation Center"/>
+
+                    <Region styleClass="nav-divider"/>
+                    <Label styleClass="nav-section" text="AI &amp; INTELLIGENCE"/>
+                    <Button styleClass="nav-button" text="AI Recommendation Engine"/>
+                    <Button styleClass="nav-button" text="Global Search &amp; Cmd Center"/>
+                    <Button styleClass="nav-button" text="Live Feed System"/>
+                    <Button styleClass="nav-button" text="Alert Intelligence"/>
+
+                    <Region styleClass="nav-divider"/>
+                    <Label styleClass="nav-section" text="ADMINISTRATION"/>
+                    <Button styleClass="nav-button" text="User &amp; Workforce Admin"/>
+                    <Button styleClass="nav-button" text="Authentication &amp; RBAC"/>
+                    <Button styleClass="nav-button" text="Audit &amp; Governance"/>
+                    <Button styleClass="nav-button" text="Notification Center"/>
+                    <Button styleClass="nav-button" text="CSV Monitoring Console"/>
+                    <Button fx:id="shrinkageNavButton" onAction="#onShrinkageNavClick" styleClass="nav-button" text="Settings"/>
+                </VBox>
+            </ScrollPane>
+            <Button styleClass="collapse-button" text="Collapse Menu"/>
         </VBox>
-        <Region VBox.vgrow="ALWAYS"/>
-        <Label fx:id="statusLabel" styleClass="sidebar-note" text="No CSV file selected." wrapText="true"/>
-    </VBox>
 
-    <VBox spacing="18.0" styleClass="workspace" HBox.hgrow="ALWAYS">
-        <padding>
-            <Insets bottom="20.0" left="28.0" right="28.0" top="18.0"/>
-        </padding>
+        <VBox styleClass="workspace" HBox.hgrow="ALWAYS">
+            <HBox alignment="CENTER_LEFT" spacing="13.0" styleClass="dashboard-toolbar">
+                <Label styleClass="workspace-title" text="WFM DASHBOARD"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <ComboBox fx:id="dateFilterCombo" prefWidth="185.0" promptText="23 May 2026 (Sat)"/>
+                <ComboBox fx:id="teamFilterCombo" prefWidth="150.0" promptText="LOB: All"/>
+                <ComboBox fx:id="agentFilterCombo" prefWidth="150.0" promptText="Site: All"/>
+                <ComboBox prefWidth="172.0" promptText="Granularity: 15 Min"/>
+                <Button fx:id="apiStatusButton" onAction="#onApiStatusButtonClick" styleClass="outline-button" text="Refresh"/>
+                <Button fx:id="uploadButton" onAction="#onUploadButtonClick" styleClass="edit-button" text="Edit Dashboard"/>
+                <Button styleClass="square-button" text="Full"/>
+            </HBox>
 
-        <HBox alignment="CENTER_LEFT" spacing="18.0">
-            <Label styleClass="workspace-title" text="AI Workforce Intelligence Platform"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Button fx:id="uploadButton" onAction="#onUploadButtonClick" styleClass="action-button" text="Upload CSV"/>
-            <Button fx:id="apiStatusButton" onAction="#onApiStatusButtonClick" styleClass="ghost-button" text="Check API"/>
-        </HBox>
-
-        <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="toolbar-card">
-            <VBox spacing="4.0">
-                <Label styleClass="toolbar-label" text="DATE"/>
-                <ComboBox fx:id="dateFilterCombo" prefWidth="160.0"/>
-            </VBox>
-            <VBox spacing="4.0">
-                <Label styleClass="toolbar-label" text="TEAM"/>
-                <ComboBox fx:id="teamFilterCombo" prefWidth="260.0"/>
-            </VBox>
-            <VBox spacing="4.0">
-                <Label styleClass="toolbar-label" text="AGENT"/>
-                <ComboBox fx:id="agentFilterCombo" prefWidth="220.0"/>
-            </VBox>
-            <Region HBox.hgrow="ALWAYS"/>
-            <VBox alignment="CENTER_RIGHT" spacing="4.0">
-                <Label styleClass="toolbar-label" text="API STATUS"/>
-                <Label fx:id="apiStatusLabel" styleClass="toolbar-value" text="Not Connected"/>
-            </VBox>
-        </HBox>
-
-        <FlowPane hgap="16.0" vgap="16.0">
-            <VBox prefWidth="150.0" styleClass="metric-card">
-                <Label styleClass="metric-label" text="Coverage"/>
-                <Label fx:id="coverageValueLabel" styleClass="metric-value" text="0.0%"/>
-            </VBox>
-            <VBox prefWidth="150.0" styleClass="metric-card">
-                <Label styleClass="metric-label" text="Shrinkage"/>
-                <Label fx:id="shrinkageValueLabel" styleClass="metric-value" text="0.0%"/>
-            </VBox>
-            <VBox prefWidth="150.0" styleClass="metric-card">
-                <Label styleClass="metric-label" text="Occupancy"/>
-                <Label fx:id="occupancyValueLabel" styleClass="metric-value" text="0.0%"/>
-            </VBox>
-            <VBox prefWidth="150.0" styleClass="metric-card">
-                <Label styleClass="metric-label" text="Agents"/>
-                <Label fx:id="agentsValueLabel" styleClass="metric-value" text="0"/>
-            </VBox>
-            <VBox prefWidth="150.0" styleClass="metric-card">
-                <Label styleClass="metric-label" text="SLA Risk"/>
-                <Label fx:id="slaRiskValueLabel" styleClass="metric-value" text="Low"/>
-            </VBox>
-        </FlowPane>
-
-        <StackPane VBox.vgrow="ALWAYS">
-            <VBox fx:id="dashboardPage" spacing="16.0">
-                <HBox spacing="16.0" VBox.vgrow="ALWAYS">
-                    <VBox spacing="10.0" styleClass="content-card" HBox.hgrow="ALWAYS">
-                        <HBox alignment="CENTER_LEFT">
-                            <Label styleClass="card-title" text="Coverage Trends"/>
-                            <Region HBox.hgrow="ALWAYS"/>
-                            <Button onAction="#onExportCoverageTrendClick" styleClass="card-button" text="Download"/>
+            <StackPane VBox.vgrow="ALWAYS">
+                <ScrollPane fx:id="dashboardScrollPane" fitToWidth="true" hbarPolicy="NEVER" styleClass="dashboard-scroll">
+                    <content>
+                <VBox fx:id="dashboardPage" spacing="12.0" styleClass="dashboard-page">
+                    <TableView fx:id="coverageTrendTable" visible="false" managed="false"/>
+                    <TableView fx:id="shrinkageAnalysisTable" visible="false" managed="false"/>
+                    <VBox spacing="10.0" styleClass="panel">
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <Label styleClass="panel-title" text="KEY PERFORMANCE INDICATORS"/>
+                            <Label styleClass="panel-subtitle" text="(Click any card to drill into module)"/>
                         </HBox>
-                        <TableView fx:id="coverageTrendTable" prefHeight="260.0" VBox.vgrow="ALWAYS"/>
-                    </VBox>
-                    <VBox spacing="10.0" styleClass="content-card" HBox.hgrow="ALWAYS">
-                        <HBox alignment="CENTER_LEFT">
-                            <Label styleClass="card-title" text="Shrinkage Analysis"/>
-                            <Region HBox.hgrow="ALWAYS"/>
-                            <Button onAction="#onExportShrinkageAnalysisClick" styleClass="card-button" text="Download"/>
+                        <HBox spacing="10.0">
+                            <VBox styleClass="kpi-card" HBox.hgrow="ALWAYS">
+                                <StackPane fx:id="serviceGaugePane" styleClass="kpi-gauge"/>
+                                <Label styleClass="kpi-label" text="Service Level (Today)"/>
+                                <Label fx:id="coverageValueLabel" styleClass="kpi-value" text="81.2%"/>
+                                <Label styleClass="kpi-target" text="Target: 80%"/>
+                                <Label styleClass="positive-text" text="up 1.2pp"/>
+                            </VBox>
+                            <VBox styleClass="kpi-card" HBox.hgrow="ALWAYS">
+                                <StackPane fx:id="ahtGaugePane" styleClass="kpi-gauge"/>
+                                <Label styleClass="kpi-label" text="AHT (Overall)"/>
+                                <Label styleClass="kpi-value" text="318s"/>
+                                <Label styleClass="kpi-target" text="Target: 320s"/>
+                                <Label styleClass="positive-text" text="down -2s"/>
+                            </VBox>
+                            <VBox styleClass="kpi-card" HBox.hgrow="ALWAYS">
+                                <StackPane fx:id="occupancyGaugePane" styleClass="kpi-gauge"/>
+                                <Label styleClass="kpi-label" text="Occupancy"/>
+                                <Label fx:id="occupancyValueLabel" styleClass="kpi-value" text="78.4%"/>
+                                <Label styleClass="kpi-target" text="Target: &lt;85%"/>
+                                <Label styleClass="positive-text" text="Healthy"/>
+                            </VBox>
+                            <VBox styleClass="kpi-card" HBox.hgrow="ALWAYS">
+                                <StackPane fx:id="shrinkageGaugePane" styleClass="kpi-gauge"/>
+                                <Label styleClass="kpi-label" text="Shrinkage"/>
+                                <Label fx:id="shrinkageValueLabel" styleClass="kpi-value" text="24.5%"/>
+                                <Label styleClass="kpi-target" text="Target: &lt;25%"/>
+                                <Label styleClass="positive-text" text="down -0.5pp"/>
+                            </VBox>
+                            <VBox styleClass="kpi-card" HBox.hgrow="ALWAYS">
+                                <Label styleClass="kpi-icon-teal" text="AG"/>
+                                <Label styleClass="kpi-label" text="Total Agents"/>
+                                <Label fx:id="agentsValueLabel" styleClass="kpi-value" text="1,248"/>
+                                <Label styleClass="kpi-target" text="On Queue: 632"/>
+                            </VBox>
+                            <VBox styleClass="kpi-card narrow-kpi">
+                                <Label styleClass="kpi-label-warning" text="Queues"/>
+                                <Label fx:id="slaRiskValueLabel" styleClass="kpi-value" text="48"/>
+                                <Label styleClass="kpi-target" text="Active: 32"/>
+                            </VBox>
                         </HBox>
-                        <TableView fx:id="shrinkageAnalysisTable" prefHeight="260.0" VBox.vgrow="ALWAYS"/>
                     </VBox>
-                </HBox>
-                <HBox spacing="16.0" VBox.vgrow="ALWAYS">
-                    <VBox spacing="10.0" styleClass="content-card" HBox.hgrow="ALWAYS">
-                        <HBox alignment="CENTER_LEFT">
-                            <Label styleClass="card-title" text="Live Agent Monitoring"/>
-                            <Region HBox.hgrow="ALWAYS"/>
-                            <Button onAction="#onExportLiveMonitoringClick" styleClass="card-button" text="Download"/>
+
+                    <GridPane hgap="14.0" vgap="12.0" VBox.vgrow="ALWAYS">
+                        <columnConstraints>
+                            <ColumnConstraints percentWidth="34.0" hgrow="ALWAYS"/>
+                            <ColumnConstraints percentWidth="42.0" hgrow="ALWAYS"/>
+                            <ColumnConstraints percentWidth="24.0" hgrow="ALWAYS"/>
+                        </columnConstraints>
+                        <rowConstraints>
+                            <RowConstraints percentHeight="42.0" vgrow="ALWAYS"/>
+                            <RowConstraints percentHeight="30.0" vgrow="ALWAYS"/>
+                            <RowConstraints percentHeight="28.0" vgrow="ALWAYS"/>
+                        </rowConstraints>
+
+                        <VBox spacing="8.0" styleClass="panel" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                            <HBox alignment="CENTER_LEFT">
+                                <Label styleClass="panel-title" text="SERVICE LEVEL TREND (6 Months)"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Button styleClass="tiny-select" text="Line Chart"/>
+                            </HBox>
+                            <HBox spacing="18.0">
+                                <Label styleClass="legend-blue" text="Service Level"/>
+                                <Label styleClass="legend-green" text="Target (80%)"/>
+                            </HBox>
+                            <StackPane fx:id="serviceLevelChartPane" prefHeight="240.0" styleClass="chartfx-host" VBox.vgrow="ALWAYS"/>
+                        </VBox>
+
+                        <VBox spacing="8.0" styleClass="panel" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                            <HBox alignment="CENTER_LEFT">
+                                <Label styleClass="panel-title" text="LIVE QUEUE MONITOR"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Button styleClass="link-button" text="View All"/>
+                            </HBox>
+                            <TableView fx:id="liveMonitoringTable" prefHeight="235.0" VBox.vgrow="ALWAYS"/>
+                        </VBox>
+
+                        <VBox spacing="9.0" styleClass="panel" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                            <HBox alignment="CENTER_LEFT">
+                                <Label styleClass="panel-title" text="REAL-TIME ALERTS"/>
+                                <Label styleClass="badge-red" text="12"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Button styleClass="link-button" text="View All"/>
+                            </HBox>
+                            <VBox spacing="9.0">
+                                <HBox styleClass="alert-row"><Label styleClass="alert-critical" text="!"/><Label text="SLA below target in 3 queues" HBox.hgrow="ALWAYS"/><Label styleClass="muted" text="2 mins ago"/></HBox>
+                                <HBox styleClass="alert-row"><Label styleClass="alert-critical" text="!"/><Label text="High wait time in Email queue" HBox.hgrow="ALWAYS"/><Label styleClass="muted" text="3 mins ago"/></HBox>
+                                <HBox styleClass="alert-row"><Label styleClass="alert-warning" text="!"/><Label text="W26 Understaff risk detected" HBox.hgrow="ALWAYS"/><Label styleClass="muted" text="5 mins ago"/></HBox>
+                                <HBox styleClass="alert-row"><Label styleClass="alert-warning" text="!"/><Label text="Overtime threshold exceeded" HBox.hgrow="ALWAYS"/><Label styleClass="muted" text="7 mins ago"/></HBox>
+                                <HBox styleClass="alert-row"><Label styleClass="alert-info" text="i"/><Label text="W25 coverage at risk if NHT delays" HBox.hgrow="ALWAYS"/><Label styleClass="muted" text="10 mins ago"/></HBox>
+                            </VBox>
+                        </VBox>
+
+                        <VBox spacing="8.0" styleClass="panel" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                            <HBox alignment="CENTER_LEFT">
+                                <Label styleClass="panel-title" text="AI RECOMMENDATIONS"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Button styleClass="link-button" text="View All"/>
+                            </HBox>
+                            <ListView fx:id="recommendationsList" prefHeight="150.0" VBox.vgrow="ALWAYS"/>
+                            <Button onAction="#onExportRecommendationsClick" styleClass="outline-button" text="View All Recommendations"/>
+                        </VBox>
+
+                        <VBox spacing="8.0" styleClass="panel" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                            <HBox spacing="12.0" HBox.hgrow="ALWAYS">
+                                <VBox spacing="9.0" styleClass="summary-block" HBox.hgrow="ALWAYS">
+                                    <HBox alignment="CENTER_LEFT"><Label styleClass="panel-title" text="ALERTS SUMMARY"/><Region HBox.hgrow="ALWAYS"/><Button styleClass="link-button" text="View All"/></HBox>
+                                    <HBox><Label text="Critical Alerts" HBox.hgrow="ALWAYS"/><Label styleClass="danger-count" text="4"/></HBox>
+                                    <HBox><Label text="Warning Alerts" HBox.hgrow="ALWAYS"/><Label styleClass="warning-count" text="8"/></HBox>
+                                    <HBox><Label text="Info Alerts" HBox.hgrow="ALWAYS"/><Label styleClass="info-count" text="12"/></HBox>
+                                    <HBox><Label text="Resolved Alerts (Today)" HBox.hgrow="ALWAYS"/><Label styleClass="success-count" text="16"/></HBox>
+                                </VBox>
+                                <VBox spacing="8.0" styleClass="summary-block" HBox.hgrow="ALWAYS">
+                                    <HBox alignment="CENTER_LEFT"><Label styleClass="panel-title" text="APPROVALS PENDING"/><Label styleClass="badge-red" text="5"/><Region HBox.hgrow="ALWAYS"/><Button styleClass="link-button" text="View All"/></HBox>
+                                    <HBox><Label text="Leave Requests" HBox.hgrow="ALWAYS"/><Label text="3"/></HBox>
+                                    <HBox><Label text="Schedule Change Requests" HBox.hgrow="ALWAYS"/><Label text="1"/></HBox>
+                                    <HBox><Label text="Overtime Requests" HBox.hgrow="ALWAYS"/><Label text="1"/></HBox>
+                                </VBox>
+                            </HBox>
+                            <VBox spacing="4.0" styleClass="summary-block">
+                                <HBox alignment="CENTER_LEFT"><Label styleClass="panel-title" text="CRITICAL STAFFING WARNINGS"/><Label styleClass="badge-red" text="3"/></HBox>
+                                <Label text="LOB-2    W26 Understaff Risk"/>
+                                <Label text="LOB-1    High Shrinkage Projected"/>
+                                <Label text="LOB-3    Low Adherence Risk"/>
+                            </VBox>
+                        </VBox>
+
+                        <VBox spacing="9.0" styleClass="panel" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                            <HBox alignment="CENTER_LEFT">
+                                <Label styleClass="panel-title" text="AI INSIGHTS"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Button styleClass="link-button" text="View All"/>
+                            </HBox>
+                            <Label styleClass="insight" wrapText="true" text="W26 volume spike expected in Email queue. Consider rebalancing 32 agents."/>
+                            <Label styleClass="insight" wrapText="true" text="Overtime risk in LOB-2 next week. Review staffing plan."/>
+                            <Label styleClass="insight" wrapText="true" text="Shrinkage above threshold in Tech Support. Recommend active review breaks."/>
+                            <Label styleClass="insight" wrapText="true" text="On track to meet 100% coverage this week."/>
+                        </VBox>
+
+                        <HBox spacing="12.0" styleClass="panel compact-panel" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="2">
+                            <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                                <Label styleClass="panel-title" text="CROSS-DEPARTMENT LIVE FEED"/>
+                                <Label text="Operations:  SL today 81.2% (target 80%)"/>
+                                <Label text="Finance:     Direct Cost/PPH EUR10.39 up"/>
+                                <Label text="Recruitment: 4 pending approvals"/>
+                            </VBox>
+                            <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                                <Label styleClass="live-dot" text="Live"/>
+                                <Label text="AHT: 318s vs 320s est"/>
+                                <Label text="GM gap: -0.2pp"/>
+                                <Label text="W26 NHT start confirmed"/>
+                            </VBox>
+                            <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                                <Label text="Abandonment: 5.4%"/>
+                                <Label text="Budget Var: -1.8% down"/>
+                                <Label text="Open Positions: 27"/>
+                            </VBox>
                         </HBox>
-                        <TableView fx:id="liveMonitoringTable" prefHeight="260.0" VBox.vgrow="ALWAYS"/>
-                    </VBox>
-                    <VBox spacing="10.0" styleClass="content-card" HBox.hgrow="ALWAYS">
-                        <HBox alignment="CENTER_LEFT">
-                            <Label styleClass="card-title" text="AI Recommendations"/>
+
+                        <VBox spacing="8.0" styleClass="panel compact-panel" GridPane.columnIndex="2" GridPane.rowIndex="2">
+                            <Label styleClass="panel-title" text="OPERATIONS SNAPSHOT"/>
+                            <GridPane hgap="8.0" vgap="6.0">
+                                <Label text="Today's Forecast" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                                <Label text="78,600" styleClass="right-value" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                                <Label text="Today's Volume" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                                <Label text="76,242" styleClass="right-value" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                                <Label text="Backlog" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                                <Label text="232" styleClass="right-value" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                                <Label text="SLA Breached Queues" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                                <Label text="3" styleClass="right-value" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+                            </GridPane>
+                        </VBox>
+                    </GridPane>
+                </VBox>
+                    </content>
+                </ScrollPane>
+
+                <VBox fx:id="analyticsPage" spacing="16.0" visible="false" managed="false" styleClass="module-page">
+                    <VBox spacing="10.0" styleClass="panel">
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <Label styleClass="panel-title" text="Individual Agent Reports"/>
                             <Region HBox.hgrow="ALWAYS"/>
-                            <Button onAction="#onExportRecommendationsClick" styleClass="card-button" text="Download"/>
+                            <Button onAction="#onExportSelectedAgentClick" styleClass="outline-button" text="Download Selected Agent"/>
+                            <Button onAction="#onExportAgentReportClick" styleClass="outline-button" text="Download All Agent Reports"/>
                         </HBox>
-                        <ListView fx:id="recommendationsList" prefHeight="260.0" VBox.vgrow="ALWAYS"/>
+                        <Label fx:id="agentReportNoteLabel" styleClass="content-note" wrapText="true"/>
+                        <TableView fx:id="agentReportTable" prefHeight="240.0" VBox.vgrow="ALWAYS"/>
                     </VBox>
-                </HBox>
-            </VBox>
+                    <VBox spacing="10.0" styleClass="panel" VBox.vgrow="ALWAYS">
+                        <HBox alignment="CENTER_LEFT">
+                            <Label styleClass="panel-title" text="Working Hours Detail"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Button onAction="#onExportWorkingHoursClick" styleClass="outline-button" text="Download"/>
+                        </HBox>
+                        <TableView fx:id="workingHoursTable" prefHeight="320.0" VBox.vgrow="ALWAYS"/>
+                    </VBox>
+                </VBox>
 
-            <VBox fx:id="analyticsPage" spacing="16.0" visible="false" managed="false">
-                <VBox spacing="10.0" styleClass="content-card">
-                    <HBox alignment="CENTER_LEFT" spacing="10.0">
-                        <Label styleClass="card-title" text="Individual Agent Reports"/>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <Button onAction="#onExportSelectedAgentClick" styleClass="card-button" text="Download Selected Agent"/>
-                        <Button onAction="#onExportAgentReportClick" styleClass="card-button" text="Download All Agent Reports"/>
-                    </HBox>
-                    <Label fx:id="agentReportNoteLabel" styleClass="content-note" wrapText="true"/>
-                    <TableView fx:id="agentReportTable" prefHeight="240.0" VBox.vgrow="ALWAYS"/>
+                <VBox fx:id="leavePage" spacing="16.0" visible="false" managed="false" styleClass="module-page">
+                    <VBox spacing="10.0" styleClass="panel" VBox.vgrow="ALWAYS">
+                        <HBox alignment="CENTER_LEFT">
+                            <Label styleClass="panel-title" text="Leave Coverage Reports"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Button onAction="#onExportLeaveCoverageClick" styleClass="outline-button" text="Download"/>
+                        </HBox>
+                        <Label fx:id="leaveNoteLabel" styleClass="content-note" wrapText="true"/>
+                        <TableView fx:id="leaveCoverageTable" prefHeight="560.0" VBox.vgrow="ALWAYS"/>
+                    </VBox>
                 </VBox>
-                <VBox spacing="10.0" styleClass="content-card" VBox.vgrow="ALWAYS">
-                    <HBox alignment="CENTER_LEFT">
-                        <Label styleClass="card-title" text="Working Hours Detail"/>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <Button onAction="#onExportWorkingHoursClick" styleClass="card-button" text="Download"/>
-                    </HBox>
-                    <TableView fx:id="workingHoursTable" prefHeight="320.0" VBox.vgrow="ALWAYS"/>
-                </VBox>
-            </VBox>
 
-            <VBox fx:id="leavePage" spacing="16.0" visible="false" managed="false">
-                <VBox spacing="10.0" styleClass="content-card" VBox.vgrow="ALWAYS">
-                    <HBox alignment="CENTER_LEFT">
-                        <Label styleClass="card-title" text="Leave Coverage Reports"/>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <Button onAction="#onExportLeaveCoverageClick" styleClass="card-button" text="Download"/>
-                    </HBox>
-                    <Label fx:id="leaveNoteLabel" styleClass="content-note" wrapText="true"/>
-                    <TableView fx:id="leaveCoverageTable" prefHeight="560.0" VBox.vgrow="ALWAYS"/>
+                <VBox fx:id="shrinkagePage" spacing="16.0" visible="false" managed="false" styleClass="module-page">
+                    <VBox spacing="10.0" styleClass="panel" VBox.vgrow="ALWAYS">
+                        <HBox alignment="CENTER_LEFT">
+                            <Label styleClass="panel-title" text="Shrinkage Reports"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Button onAction="#onExportShrinkageTableClick" styleClass="outline-button" text="Download"/>
+                        </HBox>
+                        <Label fx:id="shrinkageNoteLabel" styleClass="content-note" wrapText="true"/>
+                        <TableView fx:id="shrinkageTable" prefHeight="560.0" VBox.vgrow="ALWAYS"/>
+                    </VBox>
                 </VBox>
-            </VBox>
+            </StackPane>
 
-            <VBox fx:id="shrinkagePage" spacing="16.0" visible="false" managed="false">
-                <VBox spacing="10.0" styleClass="content-card" VBox.vgrow="ALWAYS">
-                    <HBox alignment="CENTER_LEFT">
-                        <Label styleClass="card-title" text="Shrinkage Reports"/>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <Button onAction="#onExportShrinkageTableClick" styleClass="card-button" text="Download"/>
-                    </HBox>
-                    <Label fx:id="shrinkageNoteLabel" styleClass="content-note" wrapText="true"/>
-                    <TableView fx:id="shrinkageTable" prefHeight="560.0" VBox.vgrow="ALWAYS"/>
-                </VBox>
-            </VBox>
-        </StackPane>
-    </VBox>
-</HBox>
+            <HBox alignment="CENTER_LEFT" spacing="18.0" styleClass="status-bar">
+                <Label fx:id="statusLabel" text="WebSocket Connected"/>
+                <Label text="gRPC Connected"/>
+                <Label text="CSV Watcher Active"/>
+                <Label text="Queue Listener Active"/>
+                <Label text="API Health"/>
+                <Label fx:id="apiStatusLabel" text="Healthy"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="Active Users 142"/>
+                <Label text="Environment Production"/>
+                <Label text="Last Refresh 23 May 2026 10:24:36 AM"/>
+                <Label text="System Status"/>
+            </HBox>
+        </VBox>
+    </HBox>
+</VBox>

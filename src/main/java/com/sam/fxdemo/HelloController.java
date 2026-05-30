@@ -12,10 +12,17 @@ import com.sam.fxdemo.module2.LeaveCoverageAnalyzer;
 import com.sam.fxdemo.module2.LeaveCoverageSnapshot;
 import com.sam.fxdemo.module3.ShrinkageAnalyzer;
 import com.sam.fxdemo.module3.ShrinkageSnapshot;
+import eu.hansolo.medusa.Gauge;
+import eu.hansolo.medusa.GaugeBuilder;
+import io.fair_acc.chartfx.XYChart;
+import io.fair_acc.chartfx.axes.spi.DefaultNumericAxis;
+import io.fair_acc.chartfx.renderer.spi.BasicDataSetRenderer;
+import io.fair_acc.dataset.spi.DoubleDataSet;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -23,18 +30,29 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.WebSocket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -45,8 +63,16 @@ public class HelloController {
     private static final String ALL_AGENTS = "All agents";
     private static final double CONTRACTED_HOURS_PROXY = 8.0;
     private static final double SLA_TARGET_PERCENT = 95.0;
+    private static final Path DATA_DIRECTORY = Path.of("Data");
+    private static final URI CSV_WATCH_URI = URI.create("ws://127.0.0.1:8000/ws/csv-watch");
 
     private final FastApiClient fastApiClient = new FastApiClient();
+    private final HttpClient websocketHttpClient = HttpClient.newHttpClient();
+    private final ExecutorService dataExecutor = Executors.newSingleThreadExecutor(runnable -> {
+        Thread thread = new Thread(runnable, "csv-data-loader");
+        thread.setDaemon(true);
+        return thread;
+    });
     private final AgentDatasetLoader datasetLoader = new AgentDatasetLoader();
     private final WorkingHoursAnalyzer workingHoursAnalyzer = new WorkingHoursAnalyzer();
     private final LeaveCoverageAnalyzer leaveCoverageAnalyzer = new LeaveCoverageAnalyzer();
@@ -81,16 +107,22 @@ public class HelloController {
     @FXML private Button leaveNavButton;
     @FXML private Button shrinkageNavButton;
 
+    @FXML private ScrollPane dashboardScrollPane;
     @FXML private VBox dashboardPage;
     @FXML private VBox analyticsPage;
     @FXML private VBox leavePage;
     @FXML private VBox shrinkagePage;
 
+    @FXML private StackPane serviceGaugePane;
+    @FXML private StackPane ahtGaugePane;
+    @FXML private StackPane occupancyGaugePane;
+    @FXML private StackPane shrinkageGaugePane;
     @FXML private Label coverageValueLabel;
     @FXML private Label shrinkageValueLabel;
     @FXML private Label occupancyValueLabel;
     @FXML private Label agentsValueLabel;
     @FXML private Label slaRiskValueLabel;
+    @FXML private StackPane serviceLevelChartPane;
 
     @FXML private TableView<LeaveCoverageSnapshot> coverageTrendTable;
     @FXML private TableView<ShrinkageSnapshot> shrinkageAnalysisTable;
@@ -107,15 +139,25 @@ public class HelloController {
     @FXML private Label shrinkageNoteLabel;
     @FXML private TableView<ShrinkageSnapshot> shrinkageTable;
 
+    private Gauge serviceLevelGauge;
+    private Gauge ahtGauge;
+    private Gauge occupancyGauge;
+    private Gauge shrinkageGauge;
+    private XYChart serviceLevelChart;
+    private WebSocket csvWatchWebSocket;
+
     @FXML
     private void initialize() {
         configureFilters();
         configureTables();
+        configureKpiGauges();
+        configureDashboardChart();
         configurePages();
         resetDashboard();
         showDashboardPage();
-        statusLabel.setText("No CSV file selected.");
         updateApiStatus();
+        loadDataDirectory("Dashboard ready from Data directory.");
+        connectCsvWatchSocket();
     }
 
     @FXML
@@ -133,7 +175,7 @@ public class HelloController {
             return;
         }
 
-        loadDashboard(selectedFile);
+        loadUploadedCsv(selectedFile);
     }
 
     @FXML
@@ -281,32 +323,102 @@ public class HelloController {
         }
     }
 
-    private void loadDashboard(File csvFile) {
+    public void shutdown() {
+        if (csvWatchWebSocket != null) {
+            csvWatchWebSocket.sendClose(WebSocket.NORMAL_CLOSURE, "Application closing");
+        }
+        dataExecutor.shutdownNow();
+    }
+
+    private void loadUploadedCsv(File csvFile) {
         try {
-            allRecords = datasetLoader.load(csvFile);
-            List<WorkingHoursSnapshot> working = workingHoursAnalyzer.analyze(allRecords, CONTRACTED_HOURS_PROXY, SLA_TARGET_PERCENT);
-            List<LeaveCoverageSnapshot> leave = leaveCoverageAnalyzer.analyze(allRecords, SLA_TARGET_PERCENT);
-            List<ShrinkageSnapshot> shrinkage = shrinkageAnalyzer.analyze(allRecords);
-
-            workingHoursItems.setAll(working);
-            leaveCoverageItems.setAll(leave);
-            shrinkageItems.setAll(shrinkage);
-            liveMonitoringItems.setAll(dashboardInsights.buildLiveSnapshots(allRecords, shrinkage));
-            agentReportItems.setAll(dashboardInsights.buildAgentReports(working, shrinkage, allRecords));
-            recommendationItems.setAll(dashboardInsights.buildRecommendations(working, leave, shrinkage));
-
-            populateFilters(allRecords);
-            applyFilters();
-            updateTopCards();
-
+            updateDashboardFromRecords(datasetLoader.load(csvFile));
             statusLabel.setText("Dashboard ready from " + csvFile.getName());
-            agentReportNoteLabel.setText("Individual agent reports use the selected agent filter and can be exported as CSV.");
-            leaveNoteLabel.setText("Coverage approvals follow the documented 95% rule. Blackout dates and leave balances are not present in the CSV.");
-            shrinkageNoteLabel.setText("Shrinkage and occupancy are calculated from the uploaded status-group activity and can be exported.");
         } catch (IOException exception) {
             resetDashboard();
             statusLabel.setText("Unable to read CSV data: " + exception.getMessage());
         }
+    }
+
+    private void loadDataDirectory(String successMessage) {
+        CompletableFuture
+                .supplyAsync(() -> {
+                    try {
+                        Files.createDirectories(DATA_DIRECTORY);
+                        return datasetLoader.loadDirectory(DATA_DIRECTORY);
+                    } catch (IOException exception) {
+                        throw new DataLoadException(exception);
+                    }
+                }, dataExecutor)
+                .thenAccept(records -> Platform.runLater(() -> {
+                    updateDashboardFromRecords(records);
+                    long csvCount = countCsvFiles();
+                    statusLabel.setText(successMessage + " CSV files: " + csvCount + ", records: " + records.size());
+                }))
+                .exceptionally(throwable -> {
+                    Platform.runLater(() -> statusLabel.setText("Unable to read Data CSV files: " + rootMessage(throwable)));
+                    return null;
+                });
+    }
+
+    private void updateDashboardFromRecords(List<AgentActivityRecord> records) {
+        allRecords = records;
+        if (records.isEmpty()) {
+            resetDashboard();
+            statusLabel.setText("No CSV records found in Data directory.");
+            return;
+        }
+
+        List<WorkingHoursSnapshot> working = workingHoursAnalyzer.analyze(allRecords, CONTRACTED_HOURS_PROXY, SLA_TARGET_PERCENT);
+        List<LeaveCoverageSnapshot> leave = leaveCoverageAnalyzer.analyze(allRecords, SLA_TARGET_PERCENT);
+        List<ShrinkageSnapshot> shrinkage = shrinkageAnalyzer.analyze(allRecords);
+
+        workingHoursItems.setAll(working);
+        leaveCoverageItems.setAll(leave);
+        shrinkageItems.setAll(shrinkage);
+        liveMonitoringItems.setAll(dashboardInsights.buildLiveSnapshots(allRecords, shrinkage));
+        agentReportItems.setAll(dashboardInsights.buildAgentReports(working, shrinkage, allRecords));
+        recommendationItems.setAll(dashboardInsights.buildRecommendations(working, leave, shrinkage));
+
+        populateFilters(allRecords);
+        applyFilters();
+        updateTopCards();
+
+        agentReportNoteLabel.setText("Individual agent reports use the selected agent filter and can be exported as CSV.");
+        leaveNoteLabel.setText("Coverage approvals follow the documented 95% rule. Blackout dates and leave balances are not present in the CSV.");
+        shrinkageNoteLabel.setText("Shrinkage and occupancy are calculated from Data directory CSV files and can be exported.");
+    }
+
+    private void connectCsvWatchSocket() {
+        websocketHttpClient.newWebSocketBuilder()
+                .buildAsync(CSV_WATCH_URI, new CsvWatchListener())
+                .thenAccept(webSocket -> {
+                    csvWatchWebSocket = webSocket;
+                    Platform.runLater(() -> apiStatusLabel.setText("Connected"));
+                })
+                .exceptionally(throwable -> {
+                    Platform.runLater(() -> statusLabel.setText("CSV websocket unavailable: " + rootMessage(throwable)));
+                    return null;
+                });
+    }
+
+    private long countCsvFiles() {
+        try (var stream = Files.list(DATA_DIRECTORY)) {
+            return stream
+                    .filter(Files::isRegularFile)
+                    .filter(path -> path.getFileName().toString().toLowerCase().endsWith(".csv"))
+                    .count();
+        } catch (IOException exception) {
+            return 0;
+        }
+    }
+
+    private String rootMessage(Throwable throwable) {
+        Throwable current = throwable;
+        while (current.getCause() != null) {
+            current = current.getCause();
+        }
+        return current.getMessage() == null ? current.getClass().getSimpleName() : current.getMessage();
     }
 
     private void configureFilters() {
@@ -383,19 +495,25 @@ public class HelloController {
             occupancyValueLabel.setText("0.0%");
             agentsValueLabel.setText("0");
             slaRiskValueLabel.setText("-");
+            updateKpiGauges(0, 0, 0, 0);
             return;
         }
 
-        coverageValueLabel.setText(percentFormat.format(filteredLeaveCoverage.stream()
-                .mapToDouble(LeaveCoverageSnapshot::projectedCoveragePercent)
-                .average().orElse(0.0)) + "%");
-        shrinkageValueLabel.setText(percentFormat.format(filteredShrinkage.stream()
+        double shrinkagePercent = filteredShrinkage.stream()
                 .mapToDouble(ShrinkageSnapshot::shrinkagePercent)
-                .average().orElse(0.0)) + "%");
-        occupancyValueLabel.setText(percentFormat.format(filteredShrinkage.stream()
+                .average().orElse(0.0);
+        double occupancyPercent = filteredShrinkage.stream()
                 .mapToDouble(ShrinkageSnapshot::occupancyPercent)
-                .average().orElse(0.0)) + "%");
+                .average().orElse(0.0);
+        double coveragePercent = filteredLeaveCoverage.stream()
+                .mapToDouble(LeaveCoverageSnapshot::projectedCoveragePercent)
+                .average().orElse(0.0);
+
+        coverageValueLabel.setText(percentFormat.format(coveragePercent) + "%");
+        shrinkageValueLabel.setText(percentFormat.format(shrinkagePercent) + "%");
+        occupancyValueLabel.setText(percentFormat.format(occupancyPercent) + "%");
         agentsValueLabel.setText(Long.toString(filteredAgentReports.stream().map(AgentReportSnapshot::agentId).distinct().count()));
+        updateKpiGauges(coveragePercent, 318, occupancyPercent, shrinkagePercent);
 
         boolean hasSlaRisk = filteredLeaveCoverage.stream().anyMatch(snapshot -> !snapshot.oneMoreLeaveAllowed())
                 || filteredWorkingHours.stream().anyMatch(WorkingHoursSnapshot::overtimeRisk);
@@ -419,6 +537,81 @@ public class HelloController {
         leaveCoverageTable.setItems(filteredLeaveCoverage);
         shrinkageTable.setItems(filteredShrinkage);
         recommendationsList.setItems(recommendationItems);
+    }
+
+    private void configureKpiGauges() {
+        serviceLevelGauge = createKpiGauge(81.2, 100, "SL", "%", Color.web("#46d95f"));
+        ahtGauge = createKpiGauge(318, 500, "AHT", "s", Color.web("#f59e0b"));
+        occupancyGauge = createKpiGauge(78.4, 100, "OCC", "%", Color.web("#a855f7"));
+        shrinkageGauge = createKpiGauge(24.5, 100, "SH", "%", Color.web("#3b82f6"));
+
+        serviceGaugePane.getChildren().setAll(serviceLevelGauge);
+        ahtGaugePane.getChildren().setAll(ahtGauge);
+        occupancyGaugePane.getChildren().setAll(occupancyGauge);
+        shrinkageGaugePane.getChildren().setAll(shrinkageGauge);
+    }
+
+    private Gauge createKpiGauge(double value, double maxValue, String title, String unit, Color color) {
+        Gauge gauge = GaugeBuilder.create()
+                .skinType(Gauge.SkinType.SIMPLE)
+                .minValue(0)
+                .maxValue(maxValue)
+                .value(value)
+                .title(title)
+                .unit(unit)
+                .decimals(unit.equals("s") ? 0 : 1)
+                .animated(false)
+                .valueVisible(false)
+                .barColor(color)
+                .needleColor(color)
+                .tickLabelColor(Color.web("#7f8fa3"))
+                .tickMarkColor(Color.web("#25384d"))
+                .foregroundBaseColor(Color.web("#e8f0fb"))
+                .backgroundPaint(Color.TRANSPARENT)
+                .borderPaint(Color.TRANSPARENT)
+                .build();
+        gauge.setPrefSize(58, 58);
+        gauge.setMinSize(58, 58);
+        gauge.setMaxSize(58, 58);
+        return gauge;
+    }
+
+    private void updateKpiGauges(double serviceLevel, double aht, double occupancy, double shrinkage) {
+        if (serviceLevelGauge == null) {
+            return;
+        }
+        serviceLevelGauge.setValue(serviceLevel);
+        ahtGauge.setValue(aht);
+        occupancyGauge.setValue(occupancy);
+        shrinkageGauge.setValue(shrinkage);
+    }
+
+    private void configureDashboardChart() {
+        if (serviceLevelChartPane == null) {
+            return;
+        }
+
+        DefaultNumericAxis xAxis = new DefaultNumericAxis("Month", 0, 5, 1);
+        DefaultNumericAxis yAxis = new DefaultNumericAxis("Service Level", 0, 100, 20);
+        serviceLevelChart = new XYChart(xAxis, yAxis);
+        serviceLevelChart.setAnimated(false);
+        serviceLevelChart.setLegendVisible(false);
+        serviceLevelChart.setTitle("");
+        serviceLevelChart.getToolBar().setVisible(false);
+        serviceLevelChart.getToolBar().setManaged(false);
+        serviceLevelChart.setStyle("-fx-background-color: transparent;");
+
+        DoubleDataSet serviceLevel = new DoubleDataSet("Service Level");
+        serviceLevel.add(new double[]{0, 1, 2, 3, 4, 5}, new double[]{72, 74, 88, 86, 91, 95});
+
+        DoubleDataSet target = new DoubleDataSet("Target 80%");
+        target.add(new double[]{0, 1, 2, 3, 4, 5}, new double[]{80, 80, 80, 80, 80, 80});
+
+        BasicDataSetRenderer renderer = new BasicDataSetRenderer();
+        renderer.setDrawMarker(true);
+        serviceLevelChart.getRenderers().setAll(renderer);
+        serviceLevelChart.getDatasets().setAll(serviceLevel, target);
+        serviceLevelChartPane.getChildren().setAll(serviceLevelChart);
     }
 
     private void configureCoverageTrendTable() {
@@ -509,6 +702,7 @@ public class HelloController {
 
     private void configurePages() {
         setPageVisible(dashboardPage, true);
+        setScrollVisible(dashboardScrollPane, true);
         setPageVisible(analyticsPage, false);
         setPageVisible(leavePage, false);
         setPageVisible(shrinkagePage, false);
@@ -517,6 +711,7 @@ public class HelloController {
 
     private void showDashboardPage() {
         setPageVisible(dashboardPage, true);
+        setScrollVisible(dashboardScrollPane, true);
         setPageVisible(analyticsPage, false);
         setPageVisible(leavePage, false);
         setPageVisible(shrinkagePage, false);
@@ -525,6 +720,7 @@ public class HelloController {
 
     private void showAnalyticsPage() {
         setPageVisible(dashboardPage, false);
+        setScrollVisible(dashboardScrollPane, false);
         setPageVisible(analyticsPage, true);
         setPageVisible(leavePage, false);
         setPageVisible(shrinkagePage, false);
@@ -533,6 +729,7 @@ public class HelloController {
 
     private void showLeavePage() {
         setPageVisible(dashboardPage, false);
+        setScrollVisible(dashboardScrollPane, false);
         setPageVisible(analyticsPage, false);
         setPageVisible(leavePage, true);
         setPageVisible(shrinkagePage, false);
@@ -541,6 +738,7 @@ public class HelloController {
 
     private void showShrinkagePage() {
         setPageVisible(dashboardPage, false);
+        setScrollVisible(dashboardScrollPane, false);
         setPageVisible(analyticsPage, false);
         setPageVisible(leavePage, false);
         setPageVisible(shrinkagePage, true);
@@ -550,6 +748,11 @@ public class HelloController {
     private void setPageVisible(VBox page, boolean visible) {
         page.setVisible(visible);
         page.setManaged(visible);
+    }
+
+    private void setScrollVisible(ScrollPane scrollPane, boolean visible) {
+        scrollPane.setVisible(visible);
+        scrollPane.setManaged(visible);
     }
 
     private void updateNavState(Button activeButton) {
@@ -612,13 +815,62 @@ public class HelloController {
         liveMonitoringItems.clear();
         agentReportItems.clear();
         recommendationItems.clear();
-        coverageValueLabel.setText("0.0%");
-        shrinkageValueLabel.setText("0.0%");
-        occupancyValueLabel.setText("0.0%");
-        agentsValueLabel.setText("0");
-        slaRiskValueLabel.setText("-");
+        recommendationItems.setAll(
+                "Rebalance 32 agents from low volume queues. Impact: Improve SL by 2.1pp",
+                "Add 20 agents to Email queue in W26. Impact: Reduce wait time by 18%",
+                "Review overtime in Tech Support team. Impact: Reduce overtime cost by 8%"
+        );
+        coverageValueLabel.setText("81.2%");
+        shrinkageValueLabel.setText("24.5%");
+        occupancyValueLabel.setText("78.4%");
+        agentsValueLabel.setText("1,248");
+        slaRiskValueLabel.setText("48");
+        updateKpiGauges(81.2, 318, 78.4, 24.5);
         agentReportNoteLabel.setText("Select an agent to export an individual report.");
         leaveNoteLabel.setText("Coverage reports will appear here after upload.");
         shrinkageNoteLabel.setText("Shrinkage reports will appear here after upload.");
+    }
+
+    private final class CsvWatchListener implements WebSocket.Listener {
+        private final StringBuilder messageBuffer = new StringBuilder();
+
+        @Override
+        public void onOpen(WebSocket webSocket) {
+            WebSocket.Listener.super.onOpen(webSocket);
+            Platform.runLater(() -> statusLabel.setText("CSV websocket connected. Watching Data directory."));
+        }
+
+        @Override
+        public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
+            messageBuffer.append(data);
+            if (last) {
+                String message = messageBuffer.toString();
+                messageBuffer.setLength(0);
+                if (message.contains("\"csv_changed\"") || message.contains("\"initial\"")) {
+                    loadDataDirectory(message.contains("\"initial\"")
+                            ? "Initial Data directory load complete."
+                            : "Live Data directory refresh complete.");
+                }
+            }
+            webSocket.request(1);
+            return CompletableFuture.completedFuture(null);
+        }
+
+        @Override
+        public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
+            Platform.runLater(() -> statusLabel.setText("CSV websocket closed: " + reason));
+            return WebSocket.Listener.super.onClose(webSocket, statusCode, reason);
+        }
+
+        @Override
+        public void onError(WebSocket webSocket, Throwable error) {
+            Platform.runLater(() -> statusLabel.setText("CSV websocket error: " + rootMessage(error)));
+        }
+    }
+
+    private static final class DataLoadException extends RuntimeException {
+        private DataLoadException(Throwable cause) {
+            super(cause);
+        }
     }
 }

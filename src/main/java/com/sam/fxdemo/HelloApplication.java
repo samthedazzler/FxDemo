@@ -11,6 +11,7 @@ import java.time.Duration;
 
 public class HelloApplication extends Application {
     private final FastApiServer fastApiServer = new FastApiServer();
+    private HelloController controller;
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -25,13 +26,14 @@ public class HelloApplication extends Application {
         FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("views/hello-view.fxml"));
 
         // Creates a wider scene for all 3 documented operational modules.
-        Scene scene = new Scene(fxmlLoader.load(), 1500, 820);
+        Scene scene = new Scene(fxmlLoader.load(), 1720, 960);
+        controller = fxmlLoader.getController();
         scene.getStylesheets().add(
                 HelloApplication.class.getResource("views/dashboard.css").toExternalForm()
         );
 
         // Shows the dashboard scope from the operations documentation.
-        stage.setTitle("WFM Dashboard - Modules 1-3");
+        stage.setTitle("WFM Platform - Dashboard");
 
         // Attaches the scene to the JavaFX stage.
         stage.setScene(scene);
@@ -42,6 +44,9 @@ public class HelloApplication extends Application {
 
     @Override
     public void stop() {
+        if (controller != null) {
+            controller.shutdown();
+        }
         fastApiServer.close();
     }
 }
