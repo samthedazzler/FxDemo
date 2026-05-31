@@ -34,6 +34,10 @@ public class FastApiServer implements AutoCloseable {
         processBuilder.directory(
                 PROJECT_ROOT.resolve("backend").toFile()
         );
+        processBuilder.environment().put("PYTHONPATH",
+                PROJECT_ROOT.resolve("backend").resolve("server").toAbsolutePath().toString() + ";" +
+                PROJECT_ROOT.resolve("backend").resolve("server").resolve("packages").toAbsolutePath().toString()
+        );
         processBuilder.redirectErrorStream(true);
         processBuilder.redirectOutput(ProcessBuilder.Redirect.appendTo(PROJECT_ROOT.resolve("fastapi.log").toFile()));
 

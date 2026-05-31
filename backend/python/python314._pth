@@ -1,6 +1,7 @@
 python314.zip
 .
-../packages
+../server/packages
+../server
 ..
 
 # Uncomment to run site.main() automatically

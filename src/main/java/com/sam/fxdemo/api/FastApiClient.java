@@ -25,6 +25,42 @@ public class FastApiClient {
                 .build();
 
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        return response.statusCode() == 200 && response.body().contains("\"status\":\"ok\"");
+        return response.statusCode() == 200 && (response.body().contains("\"status\":\"ok\"") || response.body().contains("\"status\": \"ok\""));
+    }
+
+    public String getDashboardKpis() throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder(URI.create("http://127.0.0.1:8000/api/dashboard/kpis"))
+                .timeout(Duration.ofSeconds(2))
+                .GET()
+                .build();
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        return response.body();
+    }
+
+    public String getCoverageTrend() throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder(URI.create("http://127.0.0.1:8000/api/dashboard/coverage-trend"))
+                .timeout(Duration.ofSeconds(2))
+                .GET()
+                .build();
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        return response.body();
+    }
+
+    public String getLiveFeed() throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder(URI.create("http://127.0.0.1:8000/api/dashboard/live-feed"))
+                .timeout(Duration.ofSeconds(2))
+                .GET()
+                .build();
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        return response.body();
+    }
+
+    public String getRtmAdherence() throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder(URI.create("http://127.0.0.1:8000/api/rtm/adherence"))
+                .timeout(Duration.ofSeconds(2))
+                .GET()
+                .build();
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        return response.body();
     }
 }
