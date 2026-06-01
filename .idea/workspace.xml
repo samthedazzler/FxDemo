@@ -4,9 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="de891ace-1fc1-4312-90ec-7ae7bc007dda" name="Changes" comment="Add initial implementation of audit logging and approval models">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-    </list>
+    <list default="true" id="de891ace-1fc1-4312-90ec-7ae7bc007dda" name="Changes" comment="Add initial project files and data models for workforce management system" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -49,7 +47,7 @@
     </selectedModels>
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="646" />
+    <option name="cachedIndexableFilesCount" value="191" />
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -83,23 +81,23 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.6939824587816528" />
-      <entry key="MS500" value="3.4216582914550595" />
-      <entry key="S2" value="7.170085697223797" />
-      <entry key="S5" value="10.586184141206058" />
-      <entry key="S10" value="13.027081378238714" />
-      <entry key="S30" value="15.444909598871034" />
-      <entry key="S60" value="16.188637625877753" />
-      <entry key="M2" value="16.585435371632563" />
-      <entry key="M5" value="16.831984979187446" />
-      <entry key="M10" value="16.92293947869961" />
-      <entry key="M15" value="17.18594853041074" />
-      <entry key="M30" value="29.411685851257346" />
-      <entry key="H1" value="131.11983140313117" />
-      <entry key="H2" value="386.1934292063497" />
-      <entry key="H4" value="691.2360113363897" />
-      <entry key="D1" value="1138.814029550914" />
-      <entry key="W1" value="1241.8989219647722" />
+      <entry key="MS100" value="1.475885389040611" />
+      <entry key="MS500" value="3.5147909502264696" />
+      <entry key="S2" value="6.777716125643595" />
+      <entry key="S5" value="10.928119230119083" />
+      <entry key="S10" value="13.754618133357837" />
+      <entry key="S30" value="16.92878713427426" />
+      <entry key="S60" value="21.21499328819096" />
+      <entry key="M2" value="28.875060606583045" />
+      <entry key="M5" value="38.89235416630497" />
+      <entry key="M10" value="43.874433025080116" />
+      <entry key="M15" value="45.97996686129901" />
+      <entry key="M30" value="59.34831500844833" />
+      <entry key="H1" value="158.7975850302258" />
+      <entry key="H2" value="411.7440028472617" />
+      <entry key="H4" value="717.6319953801441" />
+      <entry key="D1" value="1170.0064459778498" />
+      <entry key="W1" value="1274.617389318965" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -121,23 +119,23 @@
       <entry key="W1" value="0.0" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="1.6175093806427605" />
-      <entry key="MS500" value="3.3545648443732077" />
-      <entry key="S2" value="7.1212086211429195" />
-      <entry key="S5" value="10.553151668946473" />
-      <entry key="S10" value="13.004587419682911" />
-      <entry key="S30" value="15.435170414783673" />
-      <entry key="S60" value="16.18340048059509" />
-      <entry key="M2" value="16.582716751480156" />
-      <entry key="M5" value="16.830872395055255" />
-      <entry key="M10" value="16.922378834811504" />
-      <entry key="M15" value="17.185572478719273" />
-      <entry key="M30" value="29.41146495948386" />
-      <entry key="H1" value="131.11958762385143" />
-      <entry key="H2" value="386.1931391689064" />
-      <entry key="H4" value="691.2357650141163" />
-      <entry key="D1" value="1138.8139635627745" />
-      <entry key="W1" value="1241.8989117145288" />
+      <entry key="MS100" value="1.424227546345499" />
+      <entry key="MS500" value="3.4696817837961027" />
+      <entry key="S2" value="6.757175456765251" />
+      <entry key="S5" value="10.916001210610814" />
+      <entry key="S10" value="13.747280652418459" />
+      <entry key="S30" value="16.925720563983067" />
+      <entry key="S60" value="21.212549031595625" />
+      <entry key="M2" value="28.872872527793458" />
+      <entry key="M5" value="38.890940653815065" />
+      <entry key="M10" value="43.873588922656644" />
+      <entry key="M15" value="45.97936767329858" />
+      <entry key="M30" value="59.3479663259766" />
+      <entry key="H1" value="158.79727679306586" />
+      <entry key="H2" value="411.7436810874426" />
+      <entry key="H4" value="717.6317326981206" />
+      <entry key="D1" value="1170.0063769673525" />
+      <entry key="W1" value="1274.6173786241095" />
     </decayedShown>
   </component>
   <component name="ProblemsViewState">
@@ -291,7 +289,23 @@
       <option name="project" value="LOCAL" />
       <updated>1780235590216</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Refactor schedule adherence calculations and update data models for improved accuracy">
+      <option name="closed" value="true" />
+      <created>1780289200061</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1780289200061</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Add initial project files and data models for workforce management system">
+      <option name="closed" value="true" />
+      <created>1780289369157</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1780289369157</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -313,7 +327,9 @@
     <MESSAGE value="Refactor FXML layout and update controller for improved UI consistency" />
     <MESSAGE value="Uncomment apiStatusButton in HelloController for UI functionality" />
     <MESSAGE value="Add initial implementation of audit logging and approval models" />
-    <option name="LAST_COMMIT_MESSAGE" value="Add initial implementation of audit logging and approval models" />
+    <MESSAGE value="Refactor schedule adherence calculations and update data models for improved accuracy" />
+    <MESSAGE value="Add initial project files and data models for workforce management system" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add initial project files and data models for workforce management system" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
