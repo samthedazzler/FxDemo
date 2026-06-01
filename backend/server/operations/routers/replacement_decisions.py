@@ -3,182 +3,209 @@ Task 10 — Replacement Decisions (Absence Coverage)
 ====================================================
 Reference: operations_task_1.pdf §10
 
-PURPOSE
--------
-  When an agent is absent (sick call, emergency, approved leave), Operations must
-  decide who covers their workload. This involves:
-    - Identifying which agents are scheduled but not yet assigned
-    - Matching skill/queue requirements for the absent agent's work
-    - Considering overtime willingness and shift-swap rules
-    - Confirming replacement does not violate break or hours compliance
+Ranking formula:
+  candidate_score = (1 - occupancy_pct/100) * 0.6 + overtime_consented * 0.4
+  Higher score = better replacement candidate.
 
-  Decision logic (ops_task_1.pdf §10):
-    1. Determine absent agent's scheduled queues/skills for the day
-    2. Find available agents (scheduled but underloaded, or willing overtime)
-    3. Filter by skill match (agent can handle the absent agent's queue)
-    4. Rank by: spare capacity (highest OCC headroom first), then seniority
-    5. Check replacement agent's hours won't breach Irish Working Time Act limits
-    → Assign first eligible candidate; if none: escalate to supervisor
-
-DATA STATUS: LIMITED — see DATA_REQUIREMENTS.md
--------------------------------------------------
-  REQUIRED but NOT in current CSV:
-    - Scheduled roster (which agent is scheduled for which shift/queue on each date)
-    - Skill matrix (which queues/products each agent is trained for)
-    - Real-time absence notifications (sick calls received today)
-    - Overtime consent records (agents who agreed to be on standby)
-    - Working time hours accumulation (weekly hours to check 48h WTA limit)
-
-  THIS ENDPOINT CANNOT PRODUCE REAL DECISIONS without the above data.
+Data sources (operations/data/):
+  absence_notifications.csv   — sick calls and emergency absences
+  scheduled_roster.csv        — who is scheduled today
+  skill_matrix.csv            — which queues each agent is certified for
+  overtime_consent.csv        — agents willing to take extra shifts
 
 Endpoint
 --------
-  GET /api/operations/replacement-decisions  [LIMITED_DATA]
+  GET /api/operations/replacement-decisions
 """
 
-from typing import List, Optional
 from datetime import date
+from typing import List, Optional
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
+
+from operations.services.csv_loader import build_agent_day_aggregates, available_dates, get_rows
+from operations.services.demo_data_loader import (
+    _parse_date,
+    agent_queues,
+    get_absences,
+    get_roster,
+    overtime_consented,
+    roster_entry,
+    team_of_agent,
+)
 
 router = APIRouter()
 
-DATA_STATUS = "LIMITED_DATA"
+
+class ReplacementCandidate(BaseModel):
+    agent_id: str
+    team: str
+    queue_assignment: str
+    occupancy_pct: Optional[float]
+    spare_capacity_pct: Optional[float]
+    overtime_consented: bool
+    candidate_score: float
+    certified_for_absent_queues: bool
+    recommendation: str
 
 
-class ReplacementDecisionLogic(BaseModel):
-    step: int
-    action: str
-    data_required: str
-    fallback_if_missing: str
+class AbsenceInfo(BaseModel):
+    notification_id: str
+    agent_id: str
+    absence_date: str
+    absence_type: str
+    notified_at: str
+    absent_agent_queue: Optional[str]
+    absent_agent_team: Optional[str]
 
 
-class ReplacementDataRequirement(BaseModel):
-    field: str
-    source_system: str
-    why_needed: str
-    currently_available: bool
+class ReplacementDecisionResult(BaseModel):
+    absence: AbsenceInfo
+    candidates_evaluated: int
+    top_candidate: Optional[ReplacementCandidate]
+    all_candidates: List[ReplacementCandidate]
+    decision: str
+    decision_detail: str
 
 
-class ReplacementStubResponse(BaseModel):
-    endpoint: str
-    data_status: str
-    summary: str
-    decision_logic: List[ReplacementDecisionLogic]
-    data_requirements: List[ReplacementDataRequirement]
-    ranking_formula: str
-    legal_constraint: str
-    escalation_rule: str
-    available_once_integrated: List[str]
+class ReplacementSummary(BaseModel):
+    query_date: str
+    absences_found: int
+    results: List[ReplacementDecisionResult]
+    available_dates: List[date]
 
 
 @router.get(
     "/replacement-decisions",
-    response_model=ReplacementStubResponse,
-    summary="Task 10 — Replacement Decisions (Absence Coverage) [LIMITED_DATA]",
+    response_model=ReplacementSummary,
+    summary="Task 10 — Replacement Decisions (Absence Coverage)",
     description=(
-        "[LIMITED_DATA] Determines which agent should cover for an absent colleague. "
-        "Requires scheduled roster, skill matrix, and real-time absence data. "
-        "Returns decision logic spec and data requirements."
+        "Identifies and ranks replacement candidates for absent agents. "
+        "Filters by skill match against the absent agent's queue. "
+        "Scores candidates by spare OCC capacity and overtime consent. "
+        "Data sourced from operations/data/ demo CSVs."
     ),
 )
 def get_replacement_decisions(
-    absent_agent_id: Optional[str] = Query(None, description="ID of the absent agent."),
-    absence_date: Optional[date] = Query(None, description="Date of absence (YYYY-MM-DD)."),
+    absent_agent_id: Optional[str] = Query(None, description="Filter to a specific absent agent."),
+    absence_date: Optional[date] = Query(
+        None, description="Date of absence (YYYY-MM-DD). Defaults to first date in CSV."
+    ),
 ):
-    return ReplacementStubResponse(
-        endpoint="GET /api/operations/replacement-decisions",
-        data_status=DATA_STATUS,
-        summary=(
-            "Replacement Decision engine is not yet operational. "
-            "Scheduled roster and skill matrix are required before candidates "
-            "can be identified and ranked. Currently, the CSV provides actual "
-            "attendance (who showed up) but not the planned schedule (who was meant to)."
-        ),
-        decision_logic=[
-            ReplacementDecisionLogic(
-                step=1,
-                action="Look up absent agent's scheduled queues and skills for the day",
-                data_required="Scheduled roster + skill matrix per agent",
-                fallback_if_missing="Cannot determine what work needs covering",
+    avail = available_dates()
+    query_d = absence_date or avail[0]
+
+    absences = get_absences()
+    subset = [
+        a for a in absences
+        if _parse_date(a["absence_date"]) == query_d
+        and (not absent_agent_id or a["agent_id"] == absent_agent_id)
+    ]
+
+    if not subset:
+        # Return all absences in the dataset if none match the date
+        subset = [
+            a for a in absences
+            if not absent_agent_id or a["agent_id"] == absent_agent_id
+        ]
+        if not subset:
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "message": f"No absence notifications found for agent={absent_agent_id} date={absence_date}.",
+                    "available_dates": [str(d) for d in avail],
+                },
+            )
+
+    # Load actual OCC data for the date to compute occupancy / spare capacity
+    rows = get_rows()
+    agg = build_agent_day_aggregates(rows, filter_date=query_d)
+    occ_map = {rec.agent_id: rec.occupancy_pct for rec in agg.values()}
+
+    results: List[ReplacementDecisionResult] = []
+
+    for absence in subset:
+        aid = absence["agent_id"]
+        abs_date_str = absence["absence_date"]
+        abs_date = _parse_date(abs_date_str) or query_d
+
+        # Get absent agent's scheduled queue
+        absent_roster = roster_entry(aid, abs_date)
+        absent_queue = absent_roster["queue_assignment"] if absent_roster else None
+        absent_team = team_of_agent(aid)
+
+        # Build candidate pool: all agents scheduled that day (excluding the absent one)
+        scheduled_today = [
+            r for r in get_roster()
+            if _parse_date(r["schedule_date"]) == abs_date
+            and r["agent_id"] != aid
+            and r["roster_status"] == "SCHEDULED"
+        ]
+
+        candidates: List[ReplacementCandidate] = []
+        for sched in scheduled_today:
+            c_id = sched["agent_id"]
+            c_queues = agent_queues(c_id)
+            certified = (absent_queue in c_queues) if absent_queue else True
+            occ = occ_map.get(c_id)
+            spare = round(100 - occ, 1) if occ is not None else None
+            ot = overtime_consented(c_id)
+
+            # Score: 60% spare capacity + 40% overtime consent
+            cap_score = (spare / 100) if spare is not None else 0.5
+            score = round(cap_score * 0.6 + (1.0 if ot else 0.0) * 0.4, 4)
+
+            rec = "ELIGIBLE" if certified else "INELIGIBLE: skill mismatch"
+            candidates.append(ReplacementCandidate(
+                agent_id=c_id,
+                team=sched["team"],
+                queue_assignment=sched["queue_assignment"],
+                occupancy_pct=occ,
+                spare_capacity_pct=spare,
+                overtime_consented=ot,
+                candidate_score=score,
+                certified_for_absent_queues=certified,
+                recommendation=rec,
+            ))
+
+        # Sort: eligible first, then by score descending
+        eligible = sorted(
+            [c for c in candidates if c.certified_for_absent_queues],
+            key=lambda c: c.candidate_score, reverse=True
+        )
+        ineligible = [c for c in candidates if not c.certified_for_absent_queues]
+        ranked = eligible + ineligible
+
+        top = eligible[0] if eligible else None
+        decision = "REPLACEMENT_FOUND" if top else "ESCALATE_TO_SUPERVISOR"
+        detail = (
+            f"Top candidate: {top.agent_id} (score={top.candidate_score}, "
+            f"spare={top.spare_capacity_pct}%, OT_consent={top.overtime_consented})"
+            if top else
+            "No eligible replacement found — all scheduled agents lack required queue certification."
+        )
+
+        results.append(ReplacementDecisionResult(
+            absence=AbsenceInfo(
+                notification_id=absence["notification_id"],
+                agent_id=aid,
+                absence_date=abs_date_str,
+                absence_type=absence["absence_type"],
+                notified_at=absence["notified_at"],
+                absent_agent_queue=absent_queue,
+                absent_agent_team=absent_team,
             ),
-            ReplacementDecisionLogic(
-                step=2,
-                action="Find agents scheduled today with available OCC headroom (occupancy < 80%)",
-                data_required="Scheduled roster + live OCC data from CSV (available)",
-                fallback_if_missing="Cannot identify underloaded agents without schedule",
-            ),
-            ReplacementDecisionLogic(
-                step=3,
-                action="Filter candidates by skill match for absent agent's queues",
-                data_required="Skill / queue certification matrix per agent",
-                fallback_if_missing="Cannot verify skill compatibility",
-            ),
-            ReplacementDecisionLogic(
-                step=4,
-                action="Check replacement won't breach 48h/week Irish Working Time Act limit",
-                data_required="Rolling weekly hours accumulation per agent",
-                fallback_if_missing="Legal compliance cannot be verified",
-            ),
-            ReplacementDecisionLogic(
-                step=5,
-                action="Rank eligible candidates: highest spare capacity first, then seniority",
-                data_required="Agent seniority from HR records; live OCC from CSV (available)",
-                fallback_if_missing="Cannot rank without seniority data",
-            ),
-        ],
-        data_requirements=[
-            ReplacementDataRequirement(
-                field="scheduled_roster",
-                source_system="WFM Schedule Builder (/api/schedule)",
-                why_needed="Know which agents are scheduled today and their assigned queues",
-                currently_available=False,
-            ),
-            ReplacementDataRequirement(
-                field="skill_matrix",
-                source_system="HR / Training records",
-                why_needed="Confirm replacement agent can handle absent agent's queue type",
-                currently_available=False,
-            ),
-            ReplacementDataRequirement(
-                field="absence_notifications",
-                source_system="Absence management / HR ticketing system",
-                why_needed="Real-time sick call / emergency absence trigger for the decision",
-                currently_available=False,
-            ),
-            ReplacementDataRequirement(
-                field="weekly_hours_accumulation",
-                source_system="CSV (partial — daily present_hours available)",
-                why_needed="Ensure replacement doesn't breach 48h/week WTA 1997 limit",
-                currently_available=True,
-            ),
-            ReplacementDataRequirement(
-                field="overtime_consent",
-                source_system="HR / agent preference records",
-                why_needed="Only offer overtime to agents who have consented",
-                currently_available=False,
-            ),
-        ],
-        ranking_formula=(
-            "Candidate score = (1 - agent_occupancy_pct/100) × 0.6 + seniority_score × 0.4. "
-            "Higher score = better replacement candidate. "
-            "agent_occupancy_pct is derivable from CSV (Task 5). "
-            "seniority_score requires HR contract start date."
-        ),
-        legal_constraint=(
-            "Irish Working Time Act 1997: max 48 hours/week averaged over 4 months. "
-            "Replacement assignment must not push the agent's projected weekly total above 48h. "
-            "Week-to-date present_hours are computable from CSV if full-week data is loaded."
-        ),
-        escalation_rule=(
-            "If no eligible replacement found (all agents at capacity, skill mismatch, "
-            "or hours limit breached): escalate to supervisor for manual assignment or "
-            "consider cross-team borrowing. Log escalation in AuditLog."
-        ),
-        available_once_integrated=[
-            "GET /api/operations/replacement-decisions?absent_agent_id=X&absence_date=YYYY-MM-DD",
-            "Returns ranked list of candidate replacements with scores and compliance flags",
-            "POST /api/operations/replacement-decisions/assign — confirm replacement selection",
-        ],
+            candidates_evaluated=len(candidates),
+            top_candidate=top,
+            all_candidates=ranked,
+            decision=decision,
+            decision_detail=detail,
+        ))
+
+    return ReplacementSummary(
+        query_date=str(query_d),
+        absences_found=len(results),
+        results=results,
+        available_dates=avail,
     )
