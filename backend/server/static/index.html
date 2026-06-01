@@ -1,0 +1,1839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>WFM Platform — AI Enterprise Operations Intelligence</title>
+<style>
+  /* ── Reset & Base ───────────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:       #0f1117;
+    --surface:  #1a1d27;
+    --surface2: #22263a;
+    --border:   #2e3350;
+    --accent:   #4f8ef7;
+    --accent2:  #7c5cbf;
+    --green:    #22c55e;
+    --amber:    #f59e0b;
+    --red:      #ef4444;
+    --white:    #e8eaf6;
+    --muted:    #7b82a8;
+    --radius:   8px;
+    --font:     'Segoe UI', system-ui, sans-serif;
+  }
+  body {
+    background: var(--bg); color: var(--white);
+    font-family: var(--font); font-size: 14px; line-height: 1.5;
+    display: flex; min-height: 100vh;
+  }
+
+  /* ── Sidebar ────────────────────────────────────────────────────────── */
+  #sidebar {
+    width: 220px; min-height: 100vh; background: var(--surface);
+    border-right: 1px solid var(--border); padding: 0;
+    position: fixed; top: 0; left: 0; z-index: 100;
+    display: flex; flex-direction: column;
+  }
+  .sidebar-logo {
+    padding: 20px 16px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px; font-weight: 700; color: var(--accent);
+    letter-spacing: .5px;
+  }
+  .sidebar-logo span { display: block; font-size: 11px; color: var(--muted); font-weight: 400; margin-top: 2px; }
+  .nav-group { padding: 12px 0 0; }
+  .nav-label {
+    font-size: 10px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 1px;
+    padding: 0 16px 6px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 16px; cursor: pointer; color: var(--muted);
+    font-size: 13px; transition: all .15s; border-left: 3px solid transparent;
+    user-select: none;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--white); }
+  .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(79,142,247,.08); }
+  .nav-icon { font-size: 15px; width: 18px; text-align: center; }
+  .sidebar-footer { margin-top: auto; padding: 16px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--border); }
+
+  /* ── Main Content ───────────────────────────────────────────────────── */
+  #main { margin-left: 220px; flex: 1; padding: 28px; min-height: 100vh; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── Page Header ─────────────────────────────────────────────────────── */
+  .page-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .page-title { font-size: 20px; font-weight: 700; color: var(--white); }
+  .page-title span { font-size: 12px; color: var(--muted); display: block; font-weight: 400; margin-top: 2px; }
+  .page-actions { display: flex; gap: 8px; }
+
+  /* ── Buttons ─────────────────────────────────────────────────────────── */
+  .btn {
+    padding: 7px 14px; border-radius: var(--radius); border: none;
+    cursor: pointer; font-size: 13px; font-weight: 600;
+    transition: opacity .15s; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn:hover { opacity: .85; }
+  .btn-primary   { background: var(--accent); color: #fff; }
+  .btn-secondary { background: var(--surface2); color: var(--white); border: 1px solid var(--border); }
+  .btn-success   { background: var(--green); color: #fff; }
+  .btn-warning   { background: var(--amber); color: #000; }
+  .btn-danger    { background: var(--red); color: #fff; }
+  .btn-sm { padding: 4px 10px; font-size: 12px; }
+
+  /* ── Cards ───────────────────────────────────────────────────────────── */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px; margin-bottom: 20px;
+  }
+  .card-title {
+    font-size: 12px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .8px; margin-bottom: 14px;
+  }
+
+  /* ── KPI Cards Grid ──────────────────────────────────────────────────── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+  .kpi-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px; position: relative; overflow: hidden;
+  }
+  .kpi-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--accent);
+  }
+  .kpi-card.ok::before   { background: var(--green); }
+  .kpi-card.warn::before { background: var(--amber); }
+  .kpi-card.crit::before { background: var(--red); }
+  .kpi-label { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .6px; }
+  .kpi-value { font-size: 28px; font-weight: 800; color: var(--white); margin: 6px 0 2px; line-height: 1; }
+  .kpi-target { font-size: 11px; color: var(--muted); }
+  .kpi-trend  { font-size: 11px; margin-top: 4px; }
+  .trend-up   { color: var(--green); }
+  .trend-warn { color: var(--amber); }
+  .trend-down { color: var(--red); }
+
+  /* ── Tables ──────────────────────────────────────────────────────────── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    background: var(--surface2); color: var(--muted); font-size: 11px;
+    font-weight: 700; text-transform: uppercase; letter-spacing: .6px;
+    padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--border);
+  }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--white); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,.03); }
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 99px;
+    font-size: 11px; font-weight: 700;
+  }
+  .badge-green  { background: rgba(34,197,94,.15);  color: var(--green); }
+  .badge-amber  { background: rgba(245,158,11,.15); color: var(--amber); }
+  .badge-red    { background: rgba(239,68,68,.15);  color: var(--red); }
+  .badge-blue   { background: rgba(79,142,247,.15); color: var(--accent); }
+  .badge-over   { background: rgba(124,92,191,.15); color: var(--accent2); }
+
+  /* ── Form Elements ───────────────────────────────────────────────────── */
+  .form-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; align-items: flex-end; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group label { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; }
+  .form-group input, .form-group select {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--white); border-radius: var(--radius); padding: 7px 10px;
+    font-size: 13px; min-width: 120px; outline: none;
+  }
+  .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+
+  /* ── Result Box ──────────────────────────────────────────────────────── */
+  .result-box {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px; margin-top: 16px;
+  }
+  .result-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+  }
+  .result-row:last-child { border-bottom: none; }
+  .result-label { color: var(--muted); }
+  .result-value { font-weight: 700; color: var(--white); }
+  .result-highlight { color: var(--accent); font-size: 16px; }
+
+  /* ── AI Alert Box ────────────────────────────────────────────────────── */
+  .ai-alert {
+    background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.3);
+    border-radius: var(--radius); padding: 12px 16px; margin-bottom: 12px;
+    font-size: 13px;
+  }
+  .ai-alert strong { color: var(--amber); }
+  .ai-alert-actions { margin-top: 8px; display: flex; gap: 8px; }
+  .ai-success {
+    background: rgba(34,197,94,.08); border: 1px solid rgba(34,197,94,.3);
+    border-radius: var(--radius); padding: 12px 16px; margin-bottom: 12px;
+    font-size: 13px;
+  }
+  .ai-success strong { color: var(--green); }
+
+  /* ── Live KPI bar ────────────────────────────────────────────────────── */
+  .live-bar {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 12px 20px;
+    display: flex; gap: 32px; align-items: center; margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .live-metric { text-align: center; }
+  .live-metric .lv { font-size: 20px; font-weight: 800; }
+  .live-metric .ll { font-size: 10px; color: var(--muted); text-transform: uppercase; }
+  .pulse {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--green); animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.3)} }
+
+  /* ── Coverage Bar ────────────────────────────────────────────────────── */
+  .cov-bar-wrap { height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .cov-bar { height: 100%; border-radius: 4px; transition: width .4s; }
+
+  /* ── Grid layouts ────────────────────────────────────────────────────── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  /* ── Sensitivity table ───────────────────────────────────────────────── */
+  .sens-row-rec td { background: rgba(79,142,247,.1); font-weight: 700; }
+
+  /* ── RTM Status Ring ─────────────────────────────────────────────────── */
+  .status-ring {
+    width: 90px; height: 90px; border-radius: 50%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    border: 4px solid var(--green); font-weight: 800;
+  }
+  .status-ring.amber { border-color: var(--amber); }
+  .status-ring.red   { border-color: var(--red); }
+  .status-ring .sr-val { font-size: 20px; }
+  .status-ring .sr-lbl { font-size: 10px; color: var(--muted); }
+
+  /* ── Spinner ─────────────────────────────────────────────────────────── */
+  .spinner {
+    border: 3px solid var(--border); border-top-color: var(--accent);
+    border-radius: 50%; width: 24px; height: 24px;
+    animation: spin .7s linear infinite; display: inline-block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Toast ───────────────────────────────────────────────────────────── */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 12px 18px; font-size: 13px;
+    max-width: 320px; z-index: 9999; display: none;
+    box-shadow: 0 8px 32px rgba(0,0,0,.4);
+  }
+
+  /* ── Scrollbar ───────────────────────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media (max-width: 900px) {
+    #sidebar { width: 56px; }
+    .nav-item span, .nav-label, .sidebar-logo span, .sidebar-footer { display: none; }
+    #main { margin-left: 56px; padding: 16px; }
+    .kpi-grid { grid-template-columns: repeat(2,1fr); }
+    .two-col, .three-col { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Sidebar ──────────────────────────────────────────────────────────── -->
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    WFM Platform
+    <span>AI Enterprise Ops Intelligence</span>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Core</div>
+    <div class="nav-item active" onclick="navigate('dashboard')">
+      <span class="nav-icon">📊</span><span>Dashboard</span>
+    </div>
+    <div class="nav-item" onclick="navigate('forecast')">
+      <span class="nav-icon">📈</span><span>Forecast Studio</span>
+    </div>
+    <div class="nav-item" onclick="navigate('capacity')">
+      <span class="nav-icon">🏗️</span><span>Capacity Planner</span>
+    </div>
+    <div class="nav-item" onclick="navigate('schedule')">
+      <span class="nav-icon">🗓️</span><span>Schedule Builder</span>
+    </div>
+    <div class="nav-item" onclick="navigate('rtm')">
+      <span class="nav-icon">📡</span><span>RTM Console</span>
+    </div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Calculators</div>
+    <div class="nav-item" onclick="navigate('erlang')">
+      <span class="nav-icon">🧮</span><span>Erlang Suite</span>
+    </div>
+    <div class="nav-item" onclick="navigate('gm')">
+      <span class="nav-icon">💰</span><span>GM Estimator</span>
+    </div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Governance</div>
+    <div class="nav-item" onclick="navigate('audit')">
+      <span class="nav-icon">🛡️</span><span>Audit &amp; Governance</span>
+    </div>
+  </div>
+
+  <div class="sidebar-footer">v2.0 · May 2026</div>
+</nav>
+
+<!-- ── Main ──────────────────────────────────────────────────────────────── -->
+<main id="main">
+
+  <!-- ── DASHBOARD ─────────────────────────────────────────────────────── -->
+  <div id="page-dashboard" class="page active">
+    <div class="page-header">
+      <div class="page-title">WFM Dashboard
+        <span>Single-pane-of-glass control centre · <span class="pulse"></span> Live</span>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-secondary btn-sm" onclick="loadDashboard()">↻ Refresh</button>
+      </div>
+    </div>
+
+    <div id="dashboard-kpis" class="kpi-grid">
+      <div class="kpi-card"><div class="spinner"></div></div>
+    </div>
+
+    <div id="dashboard-ai-recs"></div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">6-Month Coverage Trend</div>
+        <div class="table-wrap"><table id="coverage-trend-table">
+          <thead><tr><th>Week</th><th>Req Prod Hrs</th><th>Cap Prod Hrs</th><th>Coverage %</th><th>Status</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Cross-Department Live Feed</div>
+        <div id="cross-dept-feed"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FORECAST STUDIO ───────────────────────────────────────────────── -->
+  <div id="page-forecast" class="page">
+    <div class="page-header">
+      <div class="page-title">Forecast Studio
+        <span>Create · Version · Lock · Agree</span>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-secondary btn-sm" onclick="loadForecast()">↻ Refresh</button>
+        <button class="btn btn-primary btn-sm" onclick="showVersionComparison()">Version Compare</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Locked Forecast — Jun–Nov 2026 · Assumptions Table</div>
+      <div class="table-wrap"><table id="forecast-table">
+        <thead><tr>
+          <th>Week</th><th>Offered Vol</th><th>Handled Vol</th><th>AHT (s)</th>
+          <th>Avail Rate %</th><th>In-Off Sh %</th><th>Pln Out-Off %</th>
+          <th>Unpln Out-Off %</th><th>Leavers FTE</th><th>Action</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">Event Impact Register</div>
+        <div class="table-wrap"><table id="events-table">
+          <thead><tr><th>Event</th><th>Type</th><th>Period</th><th>Impact %</th><th>Applied To</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+      <div id="version-comparison-card" class="card" style="display:none">
+        <div class="card-title">Version Comparison — Offered Volume</div>
+        <div id="version-comparison-body"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CAPACITY PLANNER ──────────────────────────────────────────────── -->
+  <div id="page-capacity" class="page">
+    <div class="page-header">
+      <div class="page-title">Capacity Planner
+        <span>Hourly Breakdown Model · 100% Coverage Target</span>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <!-- Requirement Build -->
+      <div class="card">
+        <div class="card-title">Requirement Build Engine</div>
+        <div class="form-row">
+          <div class="form-group"><label>Week</label>
+            <input id="req-week" value="W25"/></div>
+          <div class="form-group"><label>Offered Volume</label>
+            <input id="req-offered" type="number" value="13677"/></div>
+          <div class="form-group"><label>Abandon Rate %</label>
+            <input id="req-aba" type="number" value="3.1" step="0.1"/></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>AHT (seconds)</label>
+            <input id="req-aht" type="number" value="315"/></div>
+          <div class="form-group"><label>Availability Rate %</label>
+            <input id="req-avail" type="number" value="31.5" step="0.1"/></div>
+          <div class="form-group"><label>In-Office Shrink %</label>
+            <input id="req-inoff" type="number" value="12.2" step="0.1"/></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Unpln Out-Off %</label>
+            <input id="req-unp" type="number" value="19.0" step="0.1"/></div>
+          <div class="form-group"><label>Pln Out-Off %</label>
+            <input id="req-pln" type="number" value="4.0" step="0.1"/></div>
+          <div class="form-group"><label>Hrs/Week</label>
+            <input id="req-hrs" type="number" value="40"/></div>
+        </div>
+        <button class="btn btn-primary" onclick="buildRequirement()">▶ Calculate Requirement</button>
+        <div id="req-result" class="result-box" style="display:none"></div>
+      </div>
+
+      <!-- Capacity Build -->
+      <div class="card">
+        <div class="card-title">Capacity Build Engine</div>
+        <div class="form-row">
+          <div class="form-group"><label>Week</label>
+            <input id="cap-week" value="W25"/></div>
+          <div class="form-group"><label>Current FTE</label>
+            <input id="cap-fte" type="number" value="126"/></div>
+          <div class="form-group"><label>Leavers</label>
+            <input id="cap-leavers" type="number" value="5"/></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>New Hires</label>
+            <input id="cap-hires" type="number" value="3"/></div>
+          <div class="form-group"><label>Transfers</label>
+            <input id="cap-transfers" type="number" value="2"/></div>
+          <div class="form-group"><label>AHT (seconds)</label>
+            <input id="cap-aht" type="number" value="315"/></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Avail Rate %</label>
+            <input id="cap-avail" type="number" value="31.5" step="0.1"/></div>
+          <div class="form-group"><label>In-Off Sh %</label>
+            <input id="cap-inoff" type="number" value="12.2" step="0.1"/></div>
+          <div class="form-group"><label>Unpln Out %</label>
+            <input id="cap-unp" type="number" value="19.0" step="0.1"/></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Pln Out %</label>
+            <input id="cap-pln" type="number" value="4.0" step="0.1"/></div>
+                    <div class="form-group"><label>Abandon Rate %</label>
+            <input id="cap-aba" type="number" value="3.1" step="0.1"/></div>
+        </div>
+        <button class="btn btn-primary" onclick="buildCapacity()">▶ Calculate Capacity</button>
+        <div id="cap-result" class="result-box" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- Coverage Dashboard -->
+    <div class="card">
+      <div class="card-title">6-Month Rolling Coverage Dashboard</div>
+      <div id="coverage-dash-alert" class="ai-alert" style="display:none"></div>
+      <div class="table-wrap"><table id="coverage-dash-table">
+        <thead><tr>
+          <th>Week</th><th>REQ Prod Hrs</th><th>CAP Prod Hrs</th>
+          <th>Coverage %</th><th>Coverage Bar</th><th>Status</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn btn-secondary btn-sm" onclick="loadCoverageDash()">↻ Refresh</button>
+        <button class="btn btn-primary btn-sm" onclick="loadRecruitmentTracker()">View Recruitment Tracker</button>
+        <button class="btn btn-secondary btn-sm" onclick="loadLeaversTracker()">View Leavers Tracker</button>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card" id="recruitment-tracker-card" style="display:none">
+        <div class="card-title">Recruitment Tracker</div>
+        <div class="table-wrap"><table id="recruitment-tracker-table">
+          <thead><tr>
+            <th>Need Week</th><th>FTE Need</th><th>Hire Date</th>
+            <th>NHT Start</th><th>Nesting</th><th>Prod Entry</th>
+            <th>Pass Rate</th><th>Net FTE</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+      <div class="card" id="leavers-tracker-card" style="display:none">
+        <div class="card-title">Leavers Tracker — Forecast vs Actuals vs Projection</div>
+        <div class="table-wrap"><table id="leavers-tracker-table">
+          <thead><tr>
+            <th>Week</th><th>Forecast</th><th>Actuals</th><th>Projection</th><th>Alert</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCHEDULE BUILDER ───────────────────────────────────────────────── -->
+  <div id="page-schedule" class="page">
+    <div class="page-header">
+      <div class="page-title">Schedule Builder
+        <span>Interval Coverage · W23 · Mon 23 Jun 2026 · Customer Care</span>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-secondary btn-sm" onclick="loadSchedule()">↻ Refresh</button>
+        <button class="btn btn-primary btn-sm" onclick="loadScheduleMetrics()">View Metrics</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Interval Coverage Table — 30-min Granularity</div>
+      <div class="table-wrap"><table id="schedule-table">
+        <thead><tr>
+          <th>Interval</th><th>REQ (HC)</th><th>SCH (HC)</th><th>ACT (HC)</th>
+          <th>GAP</th><th>Coverage %</th><th>Status</th><th>AI Action</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <div id="schedule-summary" style="margin-top:14px;"></div>
+    </div>
+
+    <div class="card" id="schedule-metrics-card" style="display:none">
+      <div class="card-title">Weekly Scheduling Metrics Summary</div>
+      <div class="table-wrap"><table id="schedule-metrics-table">
+        <thead><tr><th>Metric</th><th>Result</th><th>Target</th><th>Status</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </div>
+
+    <!-- Custom Interval Analyser -->
+    <div class="card">
+      <div class="card-title">Custom Interval Analyser — Paste Your Own Data</div>
+      <p style="color:var(--muted);font-size:12px;margin-bottom:12px;">
+        Enter comma-separated rows: <code style="color:var(--accent)">HH:MM, REQ_HC, SCH_HC</code> — one row per line.
+      </p>
+      <textarea id="custom-intervals-input" rows="6"
+        style="width:100%;background:var(--surface2);border:1px solid var(--border);
+               color:var(--white);border-radius:var(--radius);padding:10px;
+               font-family:monospace;font-size:13px;resize:vertical;"
+        placeholder="08:00, 45, 42&#10;08:30, 50, 47&#10;09:00, 65, 63"></textarea>
+      <div style="margin-top:10px;display:flex;gap:8px;">
+        <button class="btn btn-primary" onclick="analyseCustomIntervals()">▶ Analyse</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('custom-intervals-input').value=''">Clear</button>
+      </div>
+      <div id="custom-analysis-result"></div>
+    </div>
+  </div>
+
+  <!-- ── RTM CONSOLE ────────────────────────────────────────────────────── -->
+  <div id="page-rtm" class="page">
+    <div class="page-header">
+      <div class="page-title">RTM Console
+        <span><span class="pulse"></span> LIVE · Auto-refresh every 30s</span>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-secondary btn-sm" onclick="loadRTM()">↻ Refresh Now</button>
+        <button class="btn btn-warning btn-sm" onclick="toggleRTMAutoRefresh()">⏸ Pause Auto-refresh</button>
+      </div>
+    </div>
+
+    <!-- Live KPI Bar -->
+    <div class="live-bar" id="rtm-live-bar">
+      <div style="color:var(--muted);font-size:13px;">Loading live data...</div>
+    </div>
+
+    <!-- Action Matrix + Projection -->
+    <div class="two-col">
+      <div class="card" id="rtm-action-card">
+        <div class="card-title">RTM Action Matrix — Current Trigger</div>
+        <div id="rtm-action-body"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Interval Projection — Rest of Day</div>
+        <div class="table-wrap"><table id="rtm-projection-table">
+          <thead><tr><th>Interval</th><th>REQ</th><th>SCH</th><th>Projected HC</th><th>SL Impact</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+        <div id="rtm-eod" style="margin-top:12px;"></div>
+      </div>
+    </div>
+
+    <!-- Adherence Monitor -->
+    <div class="card">
+      <div class="card-title">Adherence Monitor — Live</div>
+      <div class="table-wrap"><table id="adherence-table">
+        <thead><tr>
+          <th>Agent</th><th>Scheduled Status</th><th>Actual Status</th>
+          <th>Duration</th><th>Infraction</th><th>Action</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <div id="adherence-summary" style="margin-top:10px;font-size:12px;color:var(--muted);"></div>
+    </div>
+
+    <!-- Action Tracker + Simulate SL -->
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">RTM Action Tracker Log</div>
+        <div class="table-wrap"><table id="action-log-table">
+          <thead><tr><th>Time</th><th>Channel</th><th>LOB</th><th>Action Taken</th><th>Result</th><th>Effective?</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+      <div class="card">
+        <div class="card-title">SL Scenario Simulator</div>
+        <p style="color:var(--muted);font-size:12px;margin-bottom:12px;">
+          Enter a service level to get the correct action matrix recommendation.
+        </p>
+        <div class="form-row">
+          <div class="form-group"><label>Service Level %</label>
+            <input id="sim-sl" type="number" value="79.1" step="0.1" min="0" max="100"/></div>
+          <div style="display:flex;align-items:flex-end;">
+            <button class="btn btn-primary" onclick="simulateSL()">▶ Get Actions</button>
+          </div>
+        </div>
+        <div id="sim-result"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ERLANG SUITE ───────────────────────────────────────────────────── -->
+  <div id="page-erlang" class="page">
+    <div class="page-header">
+      <div class="page-title">Erlang Calculator Suite
+        <span>Erlang C — Agent Requirement · Erlang B — Trunk Capacity</span>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <!-- Erlang C -->
+      <div class="card">
+        <div class="card-title">Erlang C — Agent Requirement Estimator</div>
+        <p style="color:var(--muted);font-size:12px;margin-bottom:14px;">
+          Use when blocked calls are <strong style="color:var(--white)">queued</strong> — callers wait for next available agent.
+        </p>
+        <div class="form-row">
+          <div class="form-group"><label>Calls per Interval</label>
+            <input id="ec-calls" type="number" value="150"/></div>
+          <div class="form-group"><label>AHT (seconds)</label>
+            <input id="ec-aht" type="number" value="300"/></div>
+          <div class="form-group"><label>Interval (min)</label>
+            <input id="ec-interval" type="number" value="30"/></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>SL Target %</label>
+            <input id="ec-sl" type="number" value="80" step="1"/></div>
+          <div class="form-group"><label>Answer Within (s)</label>
+            <input id="ec-awt" type="number" value="20"/></div>
+        </div>
+        <button class="btn btn-primary" onclick="calcErlangC()">▶ Calculate</button>
+
+        <div id="erlang-c-result" style="display:none;margin-top:16px;">
+          <div class="result-box" id="erlang-c-summary"></div>
+          <div class="card-title" style="margin-top:16px;">Sensitivity Table</div>
+          <div class="table-wrap"><table id="erlang-c-sensitivity">
+            <thead><tr><th>Agents</th><th>SL %</th><th>Occupancy %</th><th>ASA (s)</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- Erlang B -->
+      <div class="card">
+        <div class="card-title">Erlang B — Trunk Line Capacity Estimator</div>
+        <p style="color:var(--muted);font-size:12px;margin-bottom:14px;">
+          Use when blocked calls are <strong style="color:var(--white)">lost</strong> — callers disconnect if no trunk available.
+        </p>
+        <div class="form-row">
+          <div class="form-group"><label>Busy Hour Traffic (Erlangs)</label>
+            <input id="eb-traffic" type="number" value="28" step="0.5"/></div>
+          <div class="form-group"><label>Target Blocking %</label>
+            <input id="eb-blocking" type="number" value="1.0" step="0.1"/></div>
+        </div>
+        <button class="btn btn-primary" onclick="calcErlangB()">▶ Calculate</button>
+
+        <div id="erlang-b-result" style="display:none;margin-top:16px;">
+          <div class="result-box" id="erlang-b-summary"></div>
+          <div class="card-title" style="margin-top:16px;">Sensitivity Table</div>
+          <div class="table-wrap"><table id="erlang-b-sensitivity">
+            <thead><tr><th>Trunks</th><th>Blocking %</th><th>Utilisation %</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- When to use guide -->
+    <div class="card">
+      <div class="card-title">When to Use Each Calculator</div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Calculator</th><th>Use Case</th><th>Blocked Calls</th><th>Output</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-blue">Erlang C</span></td>
+            <td>Contact centre staffing — callers wait in queue</td>
+            <td>Queued (callers wait)</td>
+            <td>Agents required to meet SL target</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-green">Erlang B</span></td>
+            <td>Trunk/line provisioning — callers who cannot connect are lost</td>
+            <td>Lost (callers disconnect)</td>
+            <td>Trunks required to meet blocking % target</td>
+          </tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- ── GM ESTIMATOR ───────────────────────────────────────────────────── -->
+  <div id="page-gm" class="page">
+    <div class="page-header">
+      <div class="page-title">GM Estimator
+        <span>Pricing → Cap Plan → Actuals · What-If Scenario Simulator</span>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-secondary btn-sm" onclick="loadGMStages()">↻ Refresh Stages</button>
+      </div>
+    </div>
+
+    <!-- Stage Comparison -->
+    <div class="card">
+      <div class="card-title">Stage Comparison — Gross Margin</div>
+      <div class="table-wrap"><table id="gm-stages-table">
+        <thead><tr>
+          <th>Stage</th><th>Handled Vol</th><th>Tx Hours</th><th>Production Hrs</th>
+          <th>Present Hrs</th><th>Revenue €</th><th>Direct Costs €</th>
+          <th>GM €</th><th>GM %</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </div>
+
+    <!-- What-If Simulator -->
+    <div class="card">
+      <div class="card-title">What-If Scenario Simulator</div>
+      <div class="form-row">
+        <div class="form-group"><label>Offered Volume</label>
+          <input id="wi-vol" type="number" value="12048"/></div>
+        <div class="form-group"><label>Abandon Rate %</label>
+          <input id="wi-aba" type="number" value="2.9" step="0.1"/></div>
+        <div class="form-group"><label>AHT (seconds)</label>
+          <input id="wi-aht" type="number" value="324"/></div>
+        <div class="form-group"><label>Avail Rate %</label>
+          <input id="wi-avail" type="number" value="31.8" step="0.1"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>In-Off Shrink %</label>
+          <input id="wi-inoff" type="number" value="12.6" step="0.1"/></div>
+        <div class="form-group"><label>Unpln Out-Off %</label>
+          <input id="wi-unp" type="number" value="19.1" step="0.1"/></div>
+        <div class="form-group"><label>Pln Out-Off %</label>
+          <input id="wi-pln" type="number" value="3.8" step="0.1"/></div>
+        <div class="form-group"><label>Price / Tx Hr €</label>
+          <input id="wi-price" type="number" value="7.30" step="0.01"/></div>
+        <div class="form-group"><label>Direct Cost / PPH €</label>
+          <input id="wi-cost" type="number" value="10.39" step="0.01"/></div>
+      </div>
+      <div class="form-row" style="background:var(--surface2);padding:12px;border-radius:var(--radius);border:1px solid var(--border);">
+        <div style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:8px;width:100%;">
+          Scenario Adjustments (applied on top of baseline above)
+        </div>
+        <div class="form-group"><label>Scenario A — AHT Delta (s)</label>
+          <input id="wi-aht-delta" type="number" value="-30" step="1"/>
+        </div>
+        <div class="form-group"><label>Scenario B — Shrink Delta %</label>
+          <input id="wi-shrink-delta" type="number" value="-1.0" step="0.1"/>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="margin-top:12px;" onclick="runWhatIf()">▶ Run Scenarios</button>
+
+      <div id="whatif-result" style="display:none;margin-top:16px;">
+        <div class="table-wrap"><table id="whatif-table">
+          <thead><tr>
+            <th>Scenario</th><th>AHT (s)</th><th>Tx Hours</th><th>Revenue €</th>
+            <th>Direct Costs €</th><th>GM %</th><th>GM Improvement (pp)</th>
+            <th>Weekly GM Δ €</th><th>Annualised Δ €</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table></div>
+        <div id="whatif-recommendation" style="margin-top:12px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── AUDIT & GOVERNANCE ─────────────────────────────────────────────── -->
+  <div id="page-audit" class="page">
+    <div class="page-header">
+      <div class="page-title">Audit &amp; Governance
+        <span>BEST WFM Self-Evaluation · Meetings Cadence · Immutable Audit Trail</span>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-secondary btn-sm" onclick="loadAudit()">↻ Refresh</button>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">BEST WFM Audit Grid — Self-Evaluation Scores</div>
+        <div id="audit-scores-body"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Meetings Cadence Tracker</div>
+        <div class="table-wrap"><table id="meetings-table">
+          <thead><tr><th>Meeting</th><th>Cadence</th><th>Last Held</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Volume / Hours Forecast Review</td><td>Monthly</td><td>01-May-2026</td><td><span class="badge badge-green">✓ On track</span></td></tr>
+            <tr><td>Capacity Planning Review</td><td>Weekly</td><td>20-May-2026</td><td><span class="badge badge-green">✓ On track</span></td></tr>
+            <tr><td>Schedules Review</td><td>Weekly</td><td>20-May-2026</td><td><span class="badge badge-green">✓ On track</span></td></tr>
+            <tr><td>RTM Routine</td><td>Daily</td><td>22-May-2026</td><td><span class="badge badge-amber">⚠ Missed ×2 — at risk</span></td></tr>
+            <tr><td>Financial Projections Review</td><td>Weekly</td><td>19-May-2026</td><td><span class="badge badge-green">✓ On track</span></td></tr>
+            <tr><td>Monthly Management Meeting (M3)</td><td>Monthly</td><td>30-Apr-2026</td><td><span class="badge badge-green">✓ On track</span></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- Audit Trail -->
+    <div class="card">
+      <div class="card-title">Full Audit Trail Log — Immutable</div>
+      <div class="table-wrap"><table id="audit-trail-table">
+        <thead><tr><th>Timestamp</th><th>User</th><th>Action</th><th>Details</th></tr></thead>
+        <tbody>
+          <tr><td>23-May 09:10</td><td>J.Murphy</td><td>Forecast locked — June 2026</td><td><button class="btn btn-secondary btn-sm">View</button></td></tr>
+          <tr><td>23-May 09:22</td><td>S.Ryan</td><td>Schedule published — W24</td><td><button class="btn btn-secondary btn-sm">View</button></td></tr>
+          <tr><td>23-May 09:45</td><td>System</td><td>AI alert: W26 coverage 93.2%</td><td><button class="btn btn-secondary btn-sm">View</button></td></tr>
+          <tr><td>23-May 10:05</td><td>J.Murphy</td><td>Hire requisition sent (6 FTE)</td><td><button class="btn btn-secondary btn-sm">View</button></td></tr>
+          <tr><td>23-May 10:22</td><td>M.Kelly</td><td>Skill change: Chat → Phone (×3)</td><td><button class="btn btn-secondary btn-sm">View</button></td></tr>
+          <tr><td>23-May 10:35</td><td>M.Kelly</td><td>3 breaks postponed — SL amber</td><td><button class="btn btn-secondary btn-sm">View</button></td></tr>
+          <tr><td>23-May 11:00</td><td>System</td><td>GM estimate pushed to Finance</td><td><button class="btn btn-secondary btn-sm">View</button></td></tr>
+          <tr><td>23-May 11:15</td><td>J.Murphy</td><td>Cap plan sign-off requested</td><td><button class="btn btn-secondary btn-sm">View</button></td></tr>
+        </tbody>
+      </table></div>
+      <p style="margin-top:10px;font-size:12px;color:var(--muted);">
+        All actions are immutable once logged. Edits create new audit entries.
+      </p>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── Toast ──────────────────────────────────────────────────────────────── -->
+<div id="toast"></div>
+
+<!-- ── JavaScript ─────────────────────────────────────────────────────────── -->
+<script>
+const API = '';  // same-origin — FastAPI serves this file
+
+// ── Utilities ────────────────────────────────────────────────────────────────
+
+async function apiFetch(path, opts = {}) {
+  try {
+    const res = await fetch(API + path, {
+      headers: { 'Content-Type': 'application/json' },
+      ...opts,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(err.detail || res.statusText);
+    }
+    return res.json();
+  } catch (e) {
+    showToast('⚠ ' + e.message, 'error');
+    throw e;
+  }
+}
+
+function showToast(msg, type = 'info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  t.style.borderColor = type === 'error' ? 'var(--red)' : type === 'success' ? 'var(--green)' : 'var(--border)';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.display = 'none'; }, 3500);
+}
+
+function fmt(v, decimals = 1) {
+  if (v == null) return '—';
+  return Number(v).toLocaleString('en-IE', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+
+function fmtEur(v) {
+  if (v == null) return '—';
+  return '€' + Number(v).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function statusBadge(status) {
+  if (!status) return '';
+  const s = status.toString();
+  if (s.includes('✓') || s === 'GREEN' || s === 'ok')  return `<span class="badge badge-green">${s}</span>`;
+  if (s.includes('⚠') || s === 'AMBER')                return `<span class="badge badge-amber">${s}</span>`;
+  if (s.includes('🔴') || s === 'RED')                  return `<span class="badge badge-red">${s}</span>`;
+  if (s === 'OVER' || s === 'WHITE')                    return `<span class="badge badge-over">${s}</span>`;
+  return `<span class="badge badge-blue">${s}</span>`;
+}
+
+function coverageBar(pct) {
+  const clamped = Math.min(pct, 130);
+  const pctWidth = Math.round((clamped / 130) * 100);
+  const color = pct >= 100 ? 'var(--green)' : pct >= 90 ? 'var(--amber)' : 'var(--red)';
+  return `<div class="cov-bar-wrap" style="width:120px">
+    <div class="cov-bar" style="width:${pctWidth}%;background:${color}"></div>
+  </div>`;
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+
+function navigate(page) {
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+
+  const navEl = document.querySelector(`.nav-item[onclick="navigate('${page}')"]`);
+  const pageEl = document.getElementById('page-' + page);
+  if (navEl)  navEl.classList.add('active');
+  if (pageEl) pageEl.classList.add('active');
+
+  // Lazy-load on first visit
+  const loaders = {
+    dashboard: loadDashboard,
+    forecast:  loadForecast,
+    capacity:  loadCoverageDash,
+    schedule:  loadSchedule,
+    rtm:       loadRTM,
+    erlang:    () => {},
+    gm:        loadGMStages,
+    audit:     loadAudit,
+  };
+  if (loaders[page] && !pageEl.dataset.loaded) {
+    pageEl.dataset.loaded = '1';
+    loaders[page]();
+  }
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────────
+
+async function loadDashboard() {
+  try {
+    const [kpiData, trendData] = await Promise.all([
+      apiFetch('/api/dashboard/kpis'),
+      apiFetch('/api/dashboard/coverage-trend'),
+    ]);
+    renderDashboardKPIs(kpiData);
+    renderCoverageTrend(trendData.data);
+    renderAIRecs(kpiData.ai_recommendations);
+    renderCrossDept(kpiData.cross_department);
+  } catch (_) {}
+}
+
+function renderDashboardKPIs(d) {
+  const t = d.targets;
+  const cards = [
+    { label: 'REQ Coverage Rate', value: fmt(d.req_coverage_rate) + '%',
+      target: 'Target ' + t.req_coverage_rate + '%',
+      trend: d.req_coverage_rate >= t.req_coverage_rate ? '✓ On target' : '⚠ Below target',
+      cls: d.req_coverage_rate >= t.req_coverage_rate ? 'ok' : 'warn' },
+    { label: 'Scheduling Efficiency', value: fmt(d.scheduling_efficiency) + '%',
+      target: 'Target ≥' + t.scheduling_efficiency + '%',
+      trend: d.scheduling_efficiency >= t.scheduling_efficiency ? '✓ On track' : '⚠ Below target',
+      cls: d.scheduling_efficiency >= t.scheduling_efficiency ? 'ok' : 'warn' },
+    { label: 'Adherence Rate', value: fmt(d.adherence_rate) + '%',
+      target: 'Target ≥95%',
+      trend: d.adherence_rate >= 95 ? '✓ On track' : '⚠ Below target',
+      cls: d.adherence_rate >= 95 ? 'ok' : 'warn' },
+    { label: 'Forecast Accuracy', value: fmt(d.forecast_accuracy) + '%',
+      target: 'Target ≥' + t.forecast_accuracy + '%',
+      trend: d.forecast_accuracy >= t.forecast_accuracy ? '✓ Improving' : '⚠ Below target',
+      cls: d.forecast_accuracy >= t.forecast_accuracy ? 'ok' : 'warn' },
+    { label: 'Occupancy', value: fmt(d.occupancy) + '%',
+      target: 'Target <' + t.occupancy_max + '%',
+      trend: d.occupancy < t.occupancy_max ? '✓ Healthy' : '⚠ High',
+      cls: d.occupancy < t.occupancy_max ? 'ok' : 'warn' },
+    { label: 'In-Office Shrinkage', value: fmt(d.in_office_shrinkage) + '%',
+      target: 'Budget 12%',
+      trend: d.in_office_shrinkage <= 12 ? '✓ On track' : '⚠ Over budget',
+      cls: d.in_office_shrinkage <= 12 ? 'ok' : 'warn' },
+    { label: 'Annualised Attrition', value: fmt(d.annualised_attrition) + '%',
+      target: 'Prev: 7.8%',
+      trend: d.annualised_attrition > 7.8 ? '⚠ Rising' : '✓ Stable',
+      cls: d.annualised_attrition > 7.8 ? 'warn' : 'ok' },
+    { label: 'GM Estimate', value: fmt(d.gm_estimate) + '%',
+      target: 'Budget ' + t.gm_estimate + '%',
+      trend: d.gm_estimate >= t.gm_estimate ? '✓ On budget' : '⚠ -0.2pp gap',
+      cls: d.gm_estimate >= t.gm_estimate ? 'ok' : 'warn' },
+  ];
+
+  document.getElementById('dashboard-kpis').innerHTML = cards.map(c => `
+    <div class="kpi-card ${c.cls}">
+      <div class="kpi-label">${c.label}</div>
+      <div class="kpi-value">${c.value}</div>
+      <div class="kpi-target">${c.target}</div>
+      <div class="kpi-trend ${c.cls === 'ok' ? 'trend-up' : 'trend-warn'}">${c.trend}</div>
+    </div>`).join('');
+}
+
+function renderCoverageTrend(rows) {
+  const tbody = document.querySelector('#coverage-trend-table tbody');
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td><strong>${r.week}</strong></td>
+      <td>${fmt(r.req_prod_hrs, 0)}</td>
+      <td>${fmt(r.cap_prod_hrs, 0)}</td>
+      <td><strong>${fmt(r.coverage_rate, 0)}%</strong></td>
+      <td>${statusBadge(r.status)}</td>
+    </tr>`).join('');
+}
+
+function renderAIRecs(recs) {
+  document.getElementById('dashboard-ai-recs').innerHTML = recs.map(r => `
+    <div class="ai-alert">
+      <strong>⚠ AI Recommendation</strong> — ${r.message}<br/>
+      <em style="color:var(--white)">${r.action}</em>
+      <div class="ai-alert-actions">
+        <button class="btn btn-warning btn-sm" onclick="showToast('Accepted: ${r.action}','success')">Accept</button>
+        <button class="btn btn-secondary btn-sm" onclick="showToast('Dismissed','info')">Dismiss</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderCrossDept(cd) {
+  const ops = cd.operations;
+  const fin = cd.finance;
+  const rec = cd.recruitment;
+  document.getElementById('cross-dept-feed').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="padding:10px;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:4px;">Operations</div>
+        SL today: <strong>${fmt(ops.sl_today)}%</strong> (target ${ops.sl_target}%)
+        ${ops.sl_today >= ops.sl_target ? statusBadge('✓ OK') : statusBadge('⚠ Below')}
+        &nbsp;|&nbsp; AHT: <strong>${ops.aht_actual}s</strong> vs ${ops.aht_estimate}s est
+      </div>
+      <div style="padding:10px;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:4px;">Finance</div>
+        Direct Cost/PPH: <strong>€${fmt(fin.direct_cost_pph, 2)}</strong>
+        &nbsp;|&nbsp; GM gap: <strong style="color:var(--amber)">${fmt(fin.gm_gap_pp, 1)}pp</strong>
+        ${statusBadge('⚠')}
+      </div>
+      <div style="padding:10px;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:4px;">Recruitment</div>
+        <strong>${rec.pending_approvals}</strong> pending hire approvals
+        &nbsp;|&nbsp; W26 NHT start: ${rec.w26_nht_confirmed ? statusBadge('✓ Confirmed') : statusBadge('⚠ Pending')}
+      </div>
+    </div>`;
+}
+
+// ── FORECAST ─────────────────────────────────────────────────────────────────
+
+async function loadForecast() {
+  try {
+    const [fcData, evData] = await Promise.all([
+      apiFetch('/api/forecast/rows'),
+      apiFetch('/api/forecast/events'),
+    ]);
+    renderForecastTable(fcData.rows);
+    renderEventsTable(evData.events);
+  } catch (_) {}
+}
+
+function renderForecastTable(rows) {
+  const tbody = document.querySelector('#forecast-table tbody');
+  tbody.innerHTML = rows.map(r => {
+    const leoverWarn = r.leavers_fte >= 3;
+    return `<tr>
+      <td><strong>${r.week}</strong></td>
+      <td>${Number(r.offered_volume).toLocaleString()}</td>
+      <td>${Number(r.handled_volume).toLocaleString()}</td>
+      <td>${r.aht_seconds}</td>
+      <td>${fmt(r.availability_rate)}%</td>
+      <td>${fmt(r.in_office_shrinkage)}%</td>
+      <td>${fmt(r.planned_out_office)}%</td>
+      <td>${fmt(r.unplanned_out_office)}%</td>
+      <td style="color:${leoverWarn ? 'var(--amber)' : 'inherit'}">${fmt(r.leavers_fte)} ${leoverWarn ? '⚠' : ''}</td>
+      <td><button class="btn btn-secondary btn-sm" onclick="editForecastRow('${r.week}')">Edit</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderEventsTable(events) {
+  const tbody = document.querySelector('#events-table tbody');
+  tbody.innerHTML = events.map(e => {
+    const impactColor = e.impact_pct > 0 ? 'var(--amber)' : 'var(--red)';
+    return `<tr>
+      <td><strong>${e.event}</strong></td>
+      <td><span class="badge badge-blue">${e.type}</span></td>
+      <td>${e.start}${e.end !== e.start ? ' → ' + e.end : ''}</td>
+      <td style="color:${impactColor};font-weight:700">${e.impact_pct > 0 ? '+' : ''}${e.impact_pct}%</td>
+      <td>${e.applied_to}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function showVersionComparison() {
+  try {
+    const data = await apiFetch('/api/forecast/version-comparison');
+    const card = document.getElementById('version-comparison-card');
+    card.style.display = 'block';
+    const weeks = ['W23', 'W24', 'W25', 'W26'];
+    const rows = data.versions.map(v => `
+      <tr>
+        <td><strong>${v.label}</strong></td>
+        ${weeks.map(w => `<td>${v[w] != null ? Number(v[w]).toLocaleString() : '—'}</td>`).join('')}
+      </tr>`).join('');
+    document.getElementById('version-comparison-body').innerHTML = `
+      <div class="ai-alert"><strong>AI:</strong> ${data.ai_recommendation}</div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Version</th>${weeks.map(w => `<th>${w}</th>`).join('')}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+      <div style="margin-top:10px;font-size:12px;color:var(--muted)">
+        FCA Client: W23 ${data.fca.client.W23}% · W24 ${data.fca.client.W24}% &nbsp;|&nbsp;
+        FCA Internal: W23 ${data.fca.internal.W23}% · W24 ${data.fca.internal.W24}%
+      </div>`;
+    showToast('Version comparison loaded', 'success');
+  } catch (_) {}
+}
+
+function editForecastRow(week) {
+  showToast(`Edit mode for ${week} — inline editing coming in v2.1`, 'info');
+}
+
+// ── CAPACITY ─────────────────────────────────────────────────────────────────
+
+async function buildRequirement() {
+  const payload = {
+    week:               document.getElementById('req-week').value,
+    offered_volume:     +document.getElementById('req-offered').value,
+    abandon_rate:       +document.getElementById('req-aba').value / 100,
+    aht_seconds:        +document.getElementById('req-aht').value,
+    availability_rate:  +document.getElementById('req-avail').value / 100,
+    in_office_shrinkage:+document.getElementById('req-inoff').value / 100,
+    unplanned_out_office:+document.getElementById('req-unp').value / 100,
+    planned_out_office: +document.getElementById('req-pln').value / 100,
+    hours_per_week:     +document.getElementById('req-hrs').value,
+  };
+  try {
+    const data = await apiFetch('/api/capacity/requirement-build', {
+      method: 'POST', body: JSON.stringify(payload),
+    });
+    const box = document.getElementById('req-result');
+    box.style.display = 'block';
+    box.innerHTML = `
+      <div style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:10px;">
+        Requirement Build — ${data.week}
+      </div>
+      ${resultRow('Offered Volume',       Number(data.offered_volume).toLocaleString())}
+      ${resultRow('Handled Volume',       fmt(data.handled_volume, 0))}
+      ${resultRow('Transaction Hours',    fmt(data.transaction_hours) + ' hrs')}
+      ${resultRow('Production Hours',     fmt(data.production_hours) + ' hrs')}
+      ${resultRow('Present Hours',        fmt(data.present_hours) + ' hrs')}
+      ${resultRow('Scheduled Hrs Net',    fmt(data.scheduled_hours_net) + ' hrs')}
+      ${resultRow('Scheduled Hrs Gross',  fmt(data.scheduled_hours_gross) + ' hrs')}
+      <div class="result-row">
+        <span class="result-label">FTE Requirement</span>
+        <span class="result-highlight">${fmt(data.fte_requirement)} FTEs</span>
+      </div>`;
+    showToast('Requirement calculated ✓', 'success');
+  } catch (_) {}
+}
+
+async function buildCapacity() {
+  const payload = {
+    week:                document.getElementById('cap-week').value,
+    current_fte:         +document.getElementById('cap-fte').value,
+    leavers:             +document.getElementById('cap-leavers').value,
+    new_hires:           +document.getElementById('cap-hires').value,
+    transfers:           +document.getElementById('cap-transfers').value,
+    aht_seconds:         +document.getElementById('cap-aht').value,
+    availability_rate:   +document.getElementById('cap-avail').value / 100,
+    in_office_shrinkage: +document.getElementById('cap-inoff').value / 100,
+    unplanned_out_office:+document.getElementById('cap-unp').value / 100,
+    planned_out_office:  +document.getElementById('cap-pln').value / 100,
+    abandon_rate:        +document.getElementById('cap-aba').value / 100,
+    hours_per_week:      40,
+  };
+  try {
+    const data = await apiFetch('/api/capacity/capacity-build', {
+      method: 'POST', body: JSON.stringify(payload),
+    });
+    const box = document.getElementById('cap-result');
+    box.style.display = 'block';
+    box.innerHTML = `
+      <div style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:10px;">
+        Capacity Build — ${data.week}
+      </div>
+      ${resultRow('Net FTE',              fmt(data.net_fte) + ' FTEs')}
+      ${resultRow('Scheduled Hrs Gross',  fmt(data.scheduled_hours_gross) + ' hrs')}
+      ${resultRow('Scheduled Hrs Net',    fmt(data.scheduled_hours_net) + ' hrs')}
+      ${resultRow('Present Hours',        fmt(data.present_hours) + ' hrs')}
+      ${resultRow('Production Hours',     fmt(data.production_hours) + ' hrs')}
+      ${resultRow('Transaction Hours',    fmt(data.transaction_hours) + ' hrs')}
+      ${resultRow('Handled Volume',       fmt(data.handled_volume, 0))}
+      <div class="result-row">
+        <span class="result-label">Offered Volume Capacity</span>
+        <span class="result-highlight">${fmt(data.offered_volume, 0)}</span>
+      </div>`;
+    showToast('Capacity calculated ✓', 'success');
+  } catch (_) {}
+}
+
+function resultRow(label, value) {
+  return `<div class="result-row">
+    <span class="result-label">${label}</span>
+    <span class="result-value">${value}</span>
+  </div>`;
+}
+
+async function loadCoverageDash() {
+  try {
+    const data = await apiFetch('/api/capacity/coverage-dashboard');
+    const alert = document.getElementById('coverage-dash-alert');
+    alert.style.display = 'block';
+    alert.innerHTML = `<strong>⚠ AI Alert:</strong> ${data.ai_alert}
+      <div class="ai-alert-actions">
+        <button class="btn btn-warning btn-sm" onclick="loadRecruitmentTracker()">Send to Recruitment</button>
+        <button class="btn btn-secondary btn-sm" onclick="showToast('Simulation mode — coming in v2.1','info')">Simulate Alternative</button>
+      </div>`;
+    const tbody = document.querySelector('#coverage-dash-table tbody');
+    tbody.innerHTML = data.data.map(r => `
+      <tr>
+        <td><strong>${r.week}</strong></td>
+        <td>${fmt(r.req_prod_hrs, 0)}</td>
+        <td>${fmt(r.cap_prod_hrs, 0)}</td>
+        <td><strong>${fmt(r.coverage_rate, 0)}%</strong></td>
+        <td>${coverageBar(r.coverage_rate)}</td>
+        <td>${statusBadge(r.status)}</td>
+      </tr>`).join('');
+  } catch (_) {}
+}
+
+async function loadRecruitmentTracker() {
+  try {
+    const data = await apiFetch('/api/capacity/recruitment-tracker');
+    const card = document.getElementById('recruitment-tracker-card');
+    card.style.display = 'block';
+    const tbody = document.querySelector('#recruitment-tracker-table tbody');
+    tbody.innerHTML = data.tracker.map(r => `
+      <tr>
+        <td><strong>${r.week_need}</strong></td>
+        <td>${r.fte_need}</td>
+        <td>${r.hire_date}</td>
+        <td>${r.nht_start}</td>
+        <td>${r.nesting}</td>
+        <td>${r.prod_entry}</td>
+        <td>${r.pass_rate}%</td>
+        <td><strong>${fmt(r.net_fte)}</strong></td>
+      </tr>`).join('');
+    showToast('Recruitment tracker loaded ✓', 'success');
+  } catch (_) {}
+}
+
+async function loadLeaversTracker() {
+  try {
+    const data = await apiFetch('/api/capacity/leavers-tracker');
+    const card = document.getElementById('leavers-tracker-card');
+    card.style.display = 'block';
+    const tbody = document.querySelector('#leavers-tracker-table tbody');
+    tbody.innerHTML = data.leavers.map(r => `
+      <tr>
+        <td><strong>${r.week}</strong></td>
+        <td>${r.forecast}</td>
+        <td>${r.actuals != null ? r.actuals : '—'}</td>
+        <td style="color:${r.alert ? 'var(--amber)' : 'inherit'}">${r.projection}${r.alert ? ' ⚠' : ''}</td>
+        <td>${r.alert ? statusBadge('⚠ Revised') : '—'}</td>
+      </tr>`).join('');
+    showToast('Leavers tracker loaded ✓', 'success');
+  } catch (_) {}
+}
+
+// ── SCHEDULE ──────────────────────────────────────────────────────────────────
+
+async function loadSchedule() {
+  try {
+    const data = await apiFetch('/api/schedule/intervals');
+    renderScheduleTable(data.intervals);
+    renderScheduleSummary(data.summary);
+  } catch (_) {}
+}
+
+function renderScheduleTable(intervals) {
+  const tbody = document.querySelector('#schedule-table tbody');
+  tbody.innerHTML = intervals.map(iv => {
+    const gapColor = iv.gap > 0 ? 'var(--green)' : iv.gap < -2 ? 'var(--red)' : 'var(--amber)';
+    return `<tr>
+      <td><strong>${iv.interval}</strong></td>
+      <td>${iv.req_hc}</td>
+      <td>${iv.sch_hc}</td>
+      <td>${iv.act_hc != null ? iv.act_hc : '—'}</td>
+      <td style="color:${gapColor};font-weight:700">${iv.gap > 0 ? '+' : ''}${iv.gap}</td>
+      <td><strong>${fmt(iv.coverage_rate)}%</strong></td>
+      <td>${statusBadge(iv.status)}</td>
+      <td style="color:var(--muted);font-size:12px">${iv.ai_action}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderScheduleSummary(s) {
+  const effColor = s.scheduling_efficiency >= 75 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('schedule-summary').innerHTML = `
+    <div style="display:flex;gap:24px;flex-wrap:wrap;padding:12px;background:var(--surface2);
+                border-radius:var(--radius);border:1px solid var(--border);font-size:13px;">
+      <div>Scheduling Efficiency:
+        <strong style="color:${effColor}">${fmt(s.scheduling_efficiency)}%</strong>
+        <span style="color:var(--muted)">(target ≥75%)</span>
+      </div>
+      <div>Over-scheduling: <strong style="color:var(--amber)">+${fmt(s.over_scheduling_pct)}%</strong></div>
+      <div>Under-scheduling: <strong style="color:var(--amber)">-${fmt(s.under_scheduling_pct)}%</strong></div>
+      <div>Total REQ: <strong>${s.total_req}</strong></div>
+      <div>Total SCH: <strong>${s.total_sch}</strong></div>
+    </div>`;
+}
+
+async function loadScheduleMetrics() {
+  try {
+    const data = await apiFetch('/api/schedule/metrics');
+    const card = document.getElementById('schedule-metrics-card');
+    card.style.display = 'block';
+    const tbody = document.querySelector('#schedule-metrics-table tbody');
+    tbody.innerHTML = data.metrics.map(m => `
+      <tr>
+        <td>${m.metric}</td>
+        <td><strong>${m.result}</strong></td>
+        <td style="color:var(--muted)">${m.target}</td>
+        <td>${m.status === '✓' ? statusBadge('✓ OK') : statusBadge('⚠')}</td>
+      </tr>`).join('');
+    showToast('Metrics loaded ✓', 'success');
+  } catch (_) {}
+}
+
+async function analyseCustomIntervals() {
+  const raw = document.getElementById('custom-intervals-input').value.trim();
+  if (!raw) { showToast('Enter at least one interval row', 'error'); return; }
+
+  const intervals = [];
+  for (const line of raw.split('\n')) {
+    const parts = line.split(',').map(s => s.trim());
+    if (parts.length < 3) continue;
+    const [interval, req_hc, sch_hc] = parts;
+    if (!interval || isNaN(+req_hc) || isNaN(+sch_hc)) continue;
+    intervals.push({ interval, req_hc: +req_hc, sch_hc: +sch_hc, act_hc: null });
+  }
+  if (!intervals.length) { showToast('No valid rows found — format: HH:MM, REQ, SCH', 'error'); return; }
+
+  try {
+    const data = await apiFetch('/api/schedule/analyse', {
+      method: 'POST',
+      body: JSON.stringify({ week: 'Custom', date: 'Custom', lob: 'Custom', intervals }),
+    });
+    const resultEl = document.getElementById('custom-analysis-result');
+    const rows = data.intervals.map(iv => `
+      <tr>
+        <td><strong>${iv.interval}</strong></td>
+        <td>${iv.req_hc}</td>
+        <td>${iv.sch_hc}</td>
+        <td style="font-weight:700">${iv.gap > 0 ? '+' : ''}${iv.gap}</td>
+        <td><strong>${fmt(iv.coverage_rate)}%</strong></td>
+        <td>${statusBadge(iv.status)}</td>
+        <td style="color:var(--muted);font-size:12px">${iv.ai_action}</td>
+      </tr>`).join('');
+
+    const s = data.summary;
+    const effColor = s.scheduling_efficiency >= 75 ? 'var(--green)' : 'var(--red)';
+    resultEl.innerHTML = `
+      <div class="result-box" style="margin-top:14px;">
+        <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:12px;font-size:13px;">
+          <div>Scheduling Efficiency:
+            <strong style="color:${effColor}">${fmt(s.scheduling_efficiency)}%</strong></div>
+          <div>Over: <strong>+${fmt(s.over_scheduling_pct)}%</strong></div>
+          <div>Under: <strong>-${fmt(s.under_scheduling_pct)}%</strong></div>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr>
+            <th>Interval</th><th>REQ</th><th>SCH</th>
+            <th>GAP</th><th>Coverage %</th><th>Status</th><th>AI Action</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table></div>
+      </div>`;
+    showToast('Analysis complete ✓', 'success');
+  } catch (_) {}
+}
+
+// ── RTM ───────────────────────────────────────────────────────────────────────
+
+let rtmAutoRefreshTimer = null;
+let rtmAutoRefreshActive = false;
+
+async function loadRTM() {
+  try {
+        const [kpi, adh, log, proj] = await Promise.all([
+      apiFetch('/api/rtm/live-kpis'),
+      apiFetch('/api/rtm/adherence'),
+      apiFetch('/api/rtm/action-log'),
+      apiFetch('/api/rtm/interval-projection'),
+    ]);
+    renderRTMLiveBar(kpi);
+    renderRTMActionCard(kpi);
+    renderAdherence(adh);
+    renderActionLog(log.log);
+    renderIntervalProjection(proj);
+  } catch (_) {}
+}
+
+function startRTMAutoRefresh() {
+  rtmAutoRefreshActive = true;
+  rtmAutoRefreshTimer  = setInterval(loadRTM, 30000);
+}
+
+function toggleRTMAutoRefresh() {
+  const btn = document.querySelector('#page-rtm .btn-warning');
+  if (rtmAutoRefreshActive) {
+    clearInterval(rtmAutoRefreshTimer);
+    rtmAutoRefreshActive = false;
+    btn.textContent = '▶ Resume Auto-refresh';
+    showToast('Auto-refresh paused', 'info');
+  } else {
+    startRTMAutoRefresh();
+    btn.textContent = '⏸ Pause Auto-refresh';
+    showToast('Auto-refresh resumed (30s)', 'info');
+  }
+}
+
+function renderRTMLiveBar(k) {
+  const slColor = k.service_level_current >= 80 ? 'var(--green)'
+                : k.service_level_current >= 75 ? 'var(--amber)' : 'var(--red)';
+  const ahtColor = k.aht_actual > k.aht_target ? 'var(--amber)' : 'var(--green)';
+  const qColor   = k.calls_in_queue > 10 ? 'var(--amber)' : 'var(--green)';
+  const abaColor = k.abandon_rate > 5 ? 'var(--red)' : 'var(--green)';
+  const agColor  = k.available_agents < 8 ? 'var(--red)' : 'var(--green)';
+
+  document.getElementById('rtm-live-bar').innerHTML = `
+    <div class="live-metric">
+      <div class="lv" style="color:${slColor}">${fmt(k.service_level_current)}%</div>
+      <div class="ll">SL Current</div>
+    </div>
+    <div class="live-metric">
+      <div class="lv" style="color:var(--green)">${fmt(k.service_level_cumulative)}%</div>
+      <div class="ll">SL Cumulative</div>
+    </div>
+    <div class="live-metric">
+      <div class="lv" style="color:${ahtColor}">${k.aht_actual}s</div>
+      <div class="ll">AHT Actual</div>
+    </div>
+    <div class="live-metric">
+      <div class="lv" style="color:var(--muted)">${k.aht_target}s</div>
+      <div class="ll">AHT Target</div>
+    </div>
+    <div class="live-metric">
+      <div class="lv" style="color:${qColor}">${k.calls_in_queue}</div>
+      <div class="ll">In Queue</div>
+    </div>
+    <div class="live-metric">
+      <div class="lv" style="color:var(--white)">${k.avg_speed_of_answer}s</div>
+      <div class="ll">ASA</div>
+    </div>
+    <div class="live-metric">
+      <div class="lv" style="color:${agColor}">${k.available_agents}</div>
+      <div class="ll">Available Agents</div>
+    </div>
+    <div class="live-metric">
+      <div class="lv" style="color:${abaColor}">${fmt(k.abandon_rate)}%</div>
+      <div class="ll">Abandon Rate</div>
+    </div>
+    <div class="live-metric">
+      <div class="ll" style="margin-bottom:4px">Status</div>
+      ${statusBadge(k.sl_status)}
+    </div>`;
+}
+
+function renderRTMActionCard(k) {
+  const statusColors = {
+    WHITE: 'var(--accent2)', GREEN: 'var(--green)',
+    AMBER: 'var(--amber)',   RED: 'var(--red)',
+  };
+  const color = statusColors[k.sl_status] || 'var(--muted)';
+  const actions = (k.recommended_actions || []).map(a =>
+    `<li style="margin-bottom:4px">→ ${a}</li>`).join('');
+
+  document.getElementById('rtm-action-body').innerHTML = `
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:14px;">
+      <div class="status-ring ${k.sl_status === 'AMBER' ? 'amber' : k.sl_status === 'RED' ? 'red' : ''}"
+           style="border-color:${color}">
+        <div class="sr-val" style="color:${color}">${k.sl_status}</div>
+        <div class="sr-lbl">SL Status</div>
+      </div>
+      <div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px">SL: ${fmt(k.service_level_current)}% · Target: ${k.service_level_target}%</div>
+        <div style="font-size:12px;color:var(--muted)">Communication: ${k.communication_flow}</div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:8px;">
+      Required Actions
+    </div>
+    <ul style="list-style:none;font-size:13px;color:var(--white);">${actions}</ul>`;
+}
+
+function renderAdherence(data) {
+  const tbody = document.querySelector('#adherence-table tbody');
+  tbody.innerHTML = data.agents.map(a => {
+    const hasInfraction = a.infraction && a.infraction !== 'None';
+    const actionBtn = hasInfraction
+      ? `<button class="btn btn-warning btn-sm" onclick="showToast('Alert sent for ${a.agent_name}','info')">Alert</button>`
+      : '—';
+    return `<tr>
+      <td><strong>${a.agent_name}</strong></td>
+      <td>${a.scheduled_status}</td>
+      <td style="color:${a.actual_status === 'Absent' ? 'var(--red)' : 'inherit'}">${a.actual_status}</td>
+      <td>${a.duration_minutes != null ? a.duration_minutes + ' min' : '—'}</td>
+      <td>${hasInfraction ? statusBadge('⚠ ' + a.infraction) : '—'}</td>
+      <td>${actionBtn}</td>
+    </tr>`;
+  }).join('');
+
+  const s = data.summary;
+  document.getElementById('adherence-summary').innerHTML =
+    `Total Active: <strong>${s.total_active}</strong> &nbsp;|&nbsp;
+     On Call: <strong>${s.on_call}</strong> &nbsp;|&nbsp;
+     Break: <strong>${s.on_break}</strong> &nbsp;|&nbsp;
+     Training: <strong>${s.in_training}</strong> &nbsp;|&nbsp;
+     Absent: <strong style="color:var(--red)">${s.absent}</strong>`;
+}
+
+function renderActionLog(log) {
+  const tbody = document.querySelector('#action-log-table tbody');
+  tbody.innerHTML = log.map(l => `
+    <tr>
+      <td><strong>${l.time}</strong></td>
+      <td>${l.channel}</td>
+      <td>${l.lob}</td>
+      <td>${l.action}</td>
+      <td style="color:${l.result.startsWith('SL') ? 'var(--green)' : 'var(--muted)'}">${l.result}</td>
+      <td>${l.effective === true ? statusBadge('✓ Yes') : l.effective === false ? statusBadge('✗ No') : '<span style="color:var(--muted)">○ Monitor</span>'}</td>
+    </tr>`).join('');
+}
+
+function renderIntervalProjection(data) {
+  const tbody = document.querySelector('#rtm-projection-table tbody');
+  tbody.innerHTML = data.intervals.map(iv => {
+    const impactColor = iv.sl_impact > 0 ? 'var(--green)' : iv.sl_impact < 0 ? 'var(--red)' : 'var(--muted)';
+    return `<tr>
+      <td><strong>${iv.interval}</strong></td>
+      <td>${iv.req}</td>
+      <td>${iv.sch}</td>
+      <td>${iv.proj}</td>
+      <td style="color:${impactColor};font-weight:700">
+        ${iv.sl_impact > 0 ? '+' : ''}${iv.sl_impact !== 0 ? iv.sl_impact + '%' : '—'}
+      </td>
+    </tr>`;
+  }).join('');
+
+  const eod = data.eod_projection;
+  const eodColor = eod.at_risk ? 'var(--amber)' : 'var(--green)';
+  document.getElementById('rtm-eod').innerHTML = `
+    <div class="ai-alert" style="border-color:${eodColor};">
+      <strong>EOD Projection:</strong>
+      SL: <strong style="color:${eodColor}">${fmt(eod.service_level)}%</strong>
+      (threshold ${eod.threshold_sl}%)
+      &nbsp;|&nbsp; ABA: <strong>${fmt(eod.abandon_rate)}%</strong>
+      <br/><em style="color:var(--white)">→ ${eod.recommendation}</em>
+      <div class="ai-alert-actions">
+        <button class="btn btn-warning btn-sm"
+          onclick="showToast('Team meetings postponed — logged in action tracker','success')">
+          Apply Recommendation
+        </button>
+      </div>
+    </div>`;
+}
+
+async function simulateSL() {
+  const sl = +document.getElementById('sim-sl').value;
+  if (isNaN(sl)) { showToast('Enter a valid service level %', 'error'); return; }
+  try {
+    const data = await apiFetch('/api/rtm/action-matrix/recommend', {
+      method: 'POST', body: JSON.stringify({ service_level: sl }),
+    });
+    const statusColors = {
+      WHITE: 'var(--accent2)', GREEN: 'var(--green)',
+      AMBER: 'var(--amber)',   RED:   'var(--red)',
+    };
+    const color   = statusColors[data.status] || 'var(--muted)';
+    const actions = data.actions.map(a => `<li>→ ${a}</li>`).join('');
+    document.getElementById('sim-result').innerHTML = `
+      <div class="result-box" style="margin-top:12px;border-left:4px solid ${color};">
+        <div style="margin-bottom:8px;">
+          Status: <strong style="color:${color}">${data.status}</strong>
+          &nbsp;·&nbsp; Condition: <em style="color:var(--muted)">${data.condition}</em>
+        </div>
+        <ul style="list-style:none;font-size:13px;margin-bottom:8px;">${actions}</ul>
+        <div style="font-size:12px;color:var(--muted)">
+          Communication: ${data.communication}
+        </div>
+      </div>`;
+  } catch (_) {}
+}
+
+// ── ERLANG ────────────────────────────────────────────────────────────────────
+
+async function calcErlangC() {
+  const payload = {
+    calls_per_interval:       +document.getElementById('ec-calls').value,
+    aht_seconds:              +document.getElementById('ec-aht').value,
+    interval_minutes:         +document.getElementById('ec-interval').value,
+    service_level_target:     +document.getElementById('ec-sl').value / 100,
+    service_time_target_seconds: +document.getElementById('ec-awt').value,
+  };
+  try {
+    const data = await apiFetch('/api/erlang/erlang-c', {
+      method: 'POST', body: JSON.stringify(payload),
+    });
+    document.getElementById('erlang-c-result').style.display = 'block';
+
+    const occColor = data.occupancy > 85 ? 'var(--red)' : data.occupancy > 75 ? 'var(--amber)' : 'var(--green)';
+    document.getElementById('erlang-c-summary').innerHTML = `
+      ${resultRow('Agents Required',        `<span style="font-size:20px;color:var(--accent);font-weight:800">${data.agents_required}</span>`)}
+      ${resultRow('Traffic Intensity',      fmt(data.traffic_intensity_erlangs, 2) + ' Erlangs')}
+      ${resultRow('Occupancy',              `<span style="color:${occColor};font-weight:700">${fmt(data.occupancy)}%</span>`)}
+      ${resultRow('Probability of Waiting', fmt(data.prob_waiting) + '%')}
+      ${resultRow('Avg Speed of Answer',    fmt(data.avg_speed_of_answer, 1) + 's')}`;
+
+    const tbody = document.querySelector('#erlang-c-sensitivity tbody');
+    tbody.innerHTML = data.sensitivity.map(r => `
+      <tr class="${r.recommended ? 'sens-row-rec' : ''}">
+        <td><strong>${r.agents}</strong>${r.recommended ? ' ✓' : ''}</td>
+        <td>${fmt(r.sl_pct)}%</td>
+        <td>${fmt(r.occupancy_pct)}%</td>
+        <td>${fmt(r.asa_seconds, 1)}s</td>
+        <td>${r.recommended ? statusBadge('✓ Recommended') : ''}</td>
+      </tr>`).join('');
+
+    showToast('Erlang C calculated ✓', 'success');
+  } catch (_) {}
+}
+
+async function calcErlangB() {
+  const payload = {
+    busy_hour_traffic_erlangs: +document.getElementById('eb-traffic').value,
+    target_blocking_pct:       +document.getElementById('eb-blocking').value,
+  };
+  try {
+    const data = await apiFetch('/api/erlang/erlang-b', {
+      method: 'POST', body: JSON.stringify(payload),
+    });
+    document.getElementById('erlang-b-result').style.display = 'block';
+
+    const blkColor = data.actual_blocking_pct <= payload.target_blocking_pct
+      ? 'var(--green)' : 'var(--red)';
+    document.getElementById('erlang-b-summary').innerHTML = `
+      ${resultRow('Trunks Required',       `<span style="font-size:20px;color:var(--accent);font-weight:800">${data.trunks_required}</span>`)}
+      ${resultRow('Actual Blocking %',     `<span style="color:${blkColor};font-weight:700">${fmt(data.actual_blocking_pct, 2)}%</span>`)}
+      ${resultRow('Traffic per Trunk',     fmt(data.traffic_per_trunk, 2) + ' Erl')}
+      ${resultRow('Utilisation',           fmt(data.utilisation) + '%')}`;
+
+    const tbody = document.querySelector('#erlang-b-sensitivity tbody');
+    tbody.innerHTML = data.sensitivity.map(r => `
+      <tr class="${r.recommended ? 'sens-row-rec' : ''}">
+        <td><strong>${r.trunks}</strong>${r.recommended ? ' ✓' : ''}</td>
+        <td>${fmt(r.blocking_pct, 2)}%</td>
+        <td>${fmt(r.utilisation_pct)}%</td>
+        <td>${r.recommended ? statusBadge('✓ Recommended') : ''}</td>
+      </tr>`).join('');
+
+    showToast('Erlang B calculated ✓', 'success');
+  } catch (_) {}
+}
+
+// ── GM ESTIMATOR ─────────────────────────────────────────────────────────────
+
+async function loadGMStages() {
+  try {
+    const data = await apiFetch('/api/gm/stages');
+    const tbody = document.querySelector('#gm-stages-table tbody');
+    const stages = data.stages;
+
+    // Find baseline (pricing) for variance colouring
+    const pricingGM = stages.find(s => s.label === 'Pricing')?.gross_margin_pct || 0;
+
+    tbody.innerHTML = stages.map(s => {
+      const gmColor = s.gross_margin_pct >= pricingGM ? 'var(--green)' : 'var(--amber)';
+      return `<tr>
+        <td><strong>${s.label}</strong></td>
+        <td>${fmt(s.handled_volume, 0)}</td>
+        <td>${fmt(s.transaction_hours)}</td>
+        <td>${fmt(s.production_hours)}</td>
+        <td>${fmt(s.present_hours)}</td>
+        <td>${fmtEur(s.revenue)}</td>
+        <td>${fmtEur(s.direct_costs)}</td>
+        <td>${fmtEur(s.gross_margin_eur)}</td>
+        <td><strong style="color:${gmColor}">${fmt(s.gross_margin_pct)}%</strong></td>
+      </tr>`;
+    }).join('');
+  } catch (_) {}
+}
+
+async function runWhatIf() {
+  const baseline = {
+    label:                    'Baseline',
+    offered_volume:           +document.getElementById('wi-vol').value,
+    abandon_rate:             +document.getElementById('wi-aba').value / 100,
+    aht_seconds:              +document.getElementById('wi-aht').value,
+    availability_rate:        +document.getElementById('wi-avail').value / 100,
+    in_office_shrinkage:      +document.getElementById('wi-inoff').value / 100,
+    unplanned_out_office:     +document.getElementById('wi-unp').value / 100,
+    planned_out_office:       +document.getElementById('wi-pln').value / 100,
+    price_per_transaction_hour: +document.getElementById('wi-price').value,
+    direct_cost_pph:          +document.getElementById('wi-cost').value,
+  };
+  const payload = {
+    baseline,
+    aht_delta_seconds:            +document.getElementById('wi-aht-delta').value,
+    in_office_shrinkage_delta:    +document.getElementById('wi-shrink-delta').value / 100,
+  };
+
+  try {
+    const data = await apiFetch('/api/gm/what-if', {
+      method: 'POST', body: JSON.stringify(payload),
+    });
+
+    document.getElementById('whatif-result').style.display = 'block';
+    const scenarios = [data.baseline, data.scenario_a, data.scenario_b, data.scenario_c];
+    const baseGM    = data.baseline.gross_margin_pct;
+
+    const tbody = document.querySelector('#whatif-table tbody');
+    tbody.innerHTML = scenarios.map(s => {
+      const isBase   = !s.gm_improvement_pp;
+      const impColor = s.gm_improvement_pp > 0 ? 'var(--green)'
+                     : s.gm_improvement_pp < 0 ? 'var(--red)' : 'var(--muted)';
+      const gmColor  = s.gross_margin_pct > baseGM ? 'var(--green)'
+                     : s.gross_margin_pct < baseGM ? 'var(--red)' : 'var(--white)';
+      return `<tr>
+        <td><strong>${s.label}</strong></td>
+        <td>${s.aht_seconds != null ? s.aht_seconds + 's' : '—'}</td>
+        <td>${fmt(s.transaction_hours)}</td>
+        <td>${fmtEur(s.revenue)}</td>
+        <td>${fmtEur(s.direct_costs)}</td>
+        <td><strong style="color:${gmColor}">${fmt(s.gross_margin_pct)}%</strong></td>
+        <td style="color:${impColor};font-weight:700">
+          ${isBase ? '—' : (s.gm_improvement_pp > 0 ? '+' : '') + fmt(s.gm_improvement_pp) + 'pp'}
+        </td>
+        <td style="color:${impColor}">
+          ${isBase ? '—' : (s.weekly_gm_delta_eur >= 0 ? '+' : '') + fmtEur(s.weekly_gm_delta_eur)}
+        </td>
+        <td style="color:${impColor}">
+          ${isBase ? '—' : (s.annualised_gm_delta_eur >= 0 ? '+' : '') + fmtEur(s.annualised_gm_delta_eur)}
+        </td>
+      </tr>`;
+    }).join('');
+
+    // Best scenario recommendation
+    const bestScenario = [data.scenario_a, data.scenario_b, data.scenario_c]
+      .reduce((best, cur) => (cur.gm_improvement_pp > best.gm_improvement_pp ? cur : best));
+
+    document.getElementById('whatif-recommendation').innerHTML = `
+      <div class="ai-success">
+        <strong>✓ AI Recommendation:</strong>
+        <strong>${bestScenario.label}</strong> yields the best outcome —
+        <strong style="color:var(--green)">+${fmt(bestScenario.gm_improvement_pp)}pp GM improvement</strong>,
+        weekly gain of <strong>${fmtEur(bestScenario.weekly_gm_delta_eur)}</strong>,
+        annualised: <strong>${fmtEur(bestScenario.annualised_gm_delta_eur)}</strong>.
+        Recommend presenting to OM + Finance.
+        <div class="ai-alert-actions">
+          <button class="btn btn-success btn-sm"
+            onclick="showToast('Scenario sent to Finance Agent — logged','success')">
+            Send to Finance
+          </button>
+          <button class="btn btn-secondary btn-sm"
+            onclick="showToast('Scheduled for next OM review meeting','info')">
+            Add to OM Agenda
+          </button>
+        </div>
+      </div>`;
+
+    showToast('What-if scenarios calculated ✓', 'success');
+  } catch (_) {}
+}
+
+// ── AUDIT ─────────────────────────────────────────────────────────────────────
+
+async function loadAudit() {
+  try {
+    const data = await apiFetch('/api/gm/audit-scores');
+    renderAuditScores(data.scores);
+  } catch (_) {}
+}
+
+function renderAuditScores(scores) {
+  const overall = scores.reduce((sum, s) => sum + s.score, 0) / scores.length;
+  const overallColor = overall >= 80 ? 'var(--green)' : 'var(--amber)';
+
+  const rows = scores.map(s => {
+    const barWidth = Math.min(s.score, 100);
+    const barColor = s.score >= s.target ? 'var(--green)' : 'var(--amber)';
+    return `
+      <div style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <span style="font-size:13px">${s.area}</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <strong style="color:${barColor}">${s.score}%</strong>
+            ${s.score >= s.target ? statusBadge('✓ OK') : statusBadge('⚠ Below')}
+          </div>
+        </div>
+        <div class="cov-bar-wrap">
+          <div class="cov-bar" style="width:${barWidth}%;background:${barColor}"></div>
+        </div>
+        ${s.corrective_action && s.corrective_action !== '—'
+          ? `<div style="font-size:11px;color:var(--amber);margin-top:3px;">→ ${s.corrective_action}</div>`
+          : ''}
+      </div>`;
+  }).join('');
+
+  document.getElementById('audit-scores-body').innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;
+                padding:12px;background:var(--surface2);border-radius:var(--radius);
+                border:1px solid var(--border);">
+      <div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:2px;">
+          Overall BEST WFM Score
+        </div>
+        <div style="font-size:28px;font-weight:800;color:${overallColor}">
+          ${fmt(overall)}%
+        </div>
+      </div>
+      <div style="flex:1">
+        <div class="cov-bar-wrap">
+          <div class="cov-bar" style="width:${Math.min(overall,100)}%;background:${overallColor}"></div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Target ≥80%</div>
+      </div>
+    </div>
+    ${rows}`;
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadDashboard();
+  // Mark dashboard as loaded
+  document.getElementById('page-dashboard').dataset.loaded = '1';
+  // Start RTM auto-refresh when RTM page is first visited
+  document.querySelector('.nav-item[onclick="navigate(\'rtm\')"]')
+    .addEventListener('click', () => {
+      if (!rtmAutoRefreshActive) startRTMAutoRefresh();
+    }, { once: true });
+});
+</script>
+</body>
+</html>

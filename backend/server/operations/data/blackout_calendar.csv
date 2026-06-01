@@ -1,0 +1,4 @@
+site,blackout_start,blackout_end,reason,notes
+Teleperformance-Dublin,4/25/2026,5/5/2026,PEAK_SEASON,End-of-month billing cycle plus public holiday coverage — no leave permitted
+Teleperformance-Dublin,5/4/2026,5/4/2026,PUBLIC_HOLIDAY,"May Bank Holiday — mandatory staffing day, all-hands"
+Teleperformance-Dublin,6/6/2026,6/7/2026,MANDATORY_COVERAGE,CRM platform migration weekend — all agents required on-site

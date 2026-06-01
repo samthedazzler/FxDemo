@@ -1,0 +1,5 @@
+notification_id,agent_id,absence_date,absence_type,notified_at,notified_by,notes,replacement_assigned
+00000000-0000-0000-0000-0000000000c9,61581509267603,4/13/2026,SICK,4/13/2026 7:55:00 AM,agent_self_report,Agent called in sick via HR portal. GP cert to follow.,
+00000000-0000-0000-0000-0000000000ca,61581904917164,4/14/2026,EMERGENCY,4/14/2026 7:48:00 AM,team_lead,Family emergency. Agent notified team lead by phone.,
+00000000-0000-0000-0000-0000000000cb,61580771977862,4/12/2026,LATE_ARRIVAL,4/12/2026 10:47:00 AM,system_auto_flag,First login 45 min after scheduled start. Transport delay reported.,
+00000000-0000-0000-0000-0000000000cc,61582253126069,4/10/2026,SICK,4/10/2026 8:10:00 AM,agent_self_report,"Absence covered by 61583018368573 (overtime, consented).",61583018368573

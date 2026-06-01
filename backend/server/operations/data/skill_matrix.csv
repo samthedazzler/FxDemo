@@ -1,0 +1,65 @@
+agent_id,team,queue_id,queue_name,certified,proficiency,certified_since
+61581635771227,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_EMAIL,Email � standard inbound,True,4,1/5/2025
+61581635771227,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_ACW,After-contact work (post-call),True,5,1/10/2024
+61581635771227,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_CHAT,Live chat,True,3,1/10/2023
+61581635771227,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_SOCIAL_MEDIA,Social media / Facebook,True,2,1/12/2023
+61581635771227,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_EMAIL_BACKLOG,Email - backlog clearing,True,3,6/1/2024
+61581666459416,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_EMAIL,Email � standard inbound,True,4,1/1/2025
+61581666459416,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_ACW,After-contact work (post-call),True,5,1/4/2024
+61581666459416,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_EMAIL_BACKLOG,Email � backlog clearing,True,3,1/2/2023
+61581674139184,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_EMAIL,Email � standard inbound,True,4,1/2/2024
+61581674139184,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_ACW,After-contact work (post-call),True,5,1/5/2024
+61581674139184,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_EMAIL_BACKLOG,Email � backlog clearing,True,3,1/11/2024
+61581674139184,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_CHAT,Live chat,True,5,1/3/2024
+61582253126069,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_EMAIL,Email � standard inbound,True,4,1/6/2023
+61582253126069,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_ACW,After-contact work (post-call),True,5,1/11/2024
+61583018368573,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_EMAIL,Email � standard inbound,True,4,1/12/2025
+61583018368573,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_ACW,After-contact work (post-call),True,5,1/11/2023
+61583018368573,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_EMAIL_BACKLOG,Email � backlog clearing,True,3,1/10/2025
+61583018368573,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_CHAT,Live chat,True,3,1/3/2025
+61585038341143,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_EMAIL,Email � standard inbound,True,4,1/12/2023
+61585038341143,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_ACW,After-contact work (post-call),True,5,1/3/2024
+61585038341143,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_EMAIL_BACKLOG,Email � backlog clearing,True,3,1/7/2024
+61585038341143,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_SOCIAL_MEDIA,Social media / Facebook,True,2,1/11/2025
+61587856425159,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_EMAIL,Email � standard inbound,True,4,1/9/2023
+61587856425159,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_ACW,After-contact work (post-call),True,5,1/11/2024
+61588190284154,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_EMAIL,Email � standard inbound,True,4,1/1/2023
+61588190284154,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_ACW,After-contact work (post-call),True,5,1/1/2024
+61588190284154,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_EMAIL_BACKLOG,Email � backlog clearing,True,3,1/7/2024
+61588377774860,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_EMAIL,Email � standard inbound,True,4,1/2/2023
+61588377774860,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_ACW,After-contact work (post-call),True,5,1/10/2025
+61588377774860,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_EMAIL_BACKLOG,Email � backlog clearing,True,3,1/6/2023
+61588377774860,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_CHAT,Live chat,True,3,1/11/2024
+61588388064451,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_EMAIL,Email � standard inbound,True,4,1/7/2025
+61588388064451,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_ACW,After-contact work (post-call),True,5,1/8/2023
+61588389996727,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_EMAIL,Email � standard inbound,True,4,1/5/2023
+61588389996727,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_ACW,After-contact work (post-call),True,5,1/4/2025
+61588389996727,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_EMAIL_BACKLOG,Email � backlog clearing,True,3,1/9/2025
+61588389996727,Account Access - Genpop HTS - General Entrypoints - TP - Dublin,QUEUE_SOCIAL_MEDIA,Social media / Facebook,True,2,1/5/2025
+100071773725249,Account Access - Genpop HTS - Incorrect Disables - TP - Dublin,QUEUE_EMAIL,Email � standard inbound,True,4,1/10/2024
+100071773725249,Account Access - Genpop HTS - Incorrect Disables - TP - Dublin,QUEUE_ACW,After-contact work (post-call),True,5,1/10/2024
+100071773725249,Account Access - Genpop HTS - Incorrect Disables - TP - Dublin,QUEUE_EMAIL_BACKLOG,Email � backlog clearing,True,3,1/6/2023
+61580771977862,Account Access - Genpop HTS - Incorrect Disables - TP - Dublin,QUEUE_EMAIL,Email � standard inbound,True,4,1/3/2025
+61580771977862,Account Access - Genpop HTS - Incorrect Disables - TP - Dublin,QUEUE_ACW,After-contact work (post-call),True,5,1/8/2023
+61580771977862,Account Access - Genpop HTS - Incorrect Disables - TP - Dublin,QUEUE_CHAT,Live chat,True,3,1/1/2023
+61580818484348,Account Access - Genpop HTS - Incorrect Disables - TP - Dublin,QUEUE_EMAIL,Email � standard inbound,True,4,1/3/2025
+61580818484348,Account Access - Genpop HTS - Incorrect Disables - TP - Dublin,QUEUE_ACW,After-contact work (post-call),True,5,1/3/2025
+61580818484348,Account Access - Genpop HTS - Incorrect Disables - TP - Dublin,QUEUE_EMAIL_BACKLOG,Email � backlog clearing,False,0,1/7/2025
+61581055615480,Account Access - Genpop HTS - Incorrect Disables - TP - Dublin,QUEUE_EMAIL,Email � standard inbound,True,4,1/2/2024
+61581055615480,Account Access - Genpop HTS - Incorrect Disables - TP - Dublin,QUEUE_ACW,After-contact work (post-call),True,5,1/7/2025
+61581055615480,Account Access - Genpop HTS - Incorrect Disables - TP - Dublin,QUEUE_EMAIL_BACKLOG,Email � backlog clearing,True,3,1/8/2025
+61581509267603,Account Access - Genpop HTS - Incorrect Disables - TP - Dublin,QUEUE_EMAIL,Email � standard inbound,True,4,1/5/2025
+61581509267603,Account Access - Genpop HTS - Incorrect Disables - TP - Dublin,QUEUE_ACW,After-contact work (post-call),True,5,1/1/2025
+61581509267603,Account Access - Genpop HTS - Incorrect Disables - TP - Dublin,QUEUE_SOCIAL_MEDIA,Social media / Facebook,True,2,1/12/2023
+61581904917164,Account Access - Genpop HTS - Incorrect Disables - TP - Dublin,QUEUE_EMAIL,Email � standard inbound,True,4,1/11/2025
+61581904917164,Account Access - Genpop HTS - Incorrect Disables - TP - Dublin,QUEUE_ACW,After-contact work (post-call),True,5,1/5/2025
+61581904917164,Account Access - Genpop HTS - Incorrect Disables - TP - Dublin,QUEUE_EMAIL_BACKLOG,Email � backlog clearing,True,3,1/6/2023
+61581904917164,Account Access - Genpop HTS - Incorrect Disables - TP - Dublin,QUEUE_CHAT,Live chat,True,3,1/5/2024
+61581980363535,Account Access - Genpop HTS - Incorrect Disables - TP - Dublin,QUEUE_EMAIL,Email � standard inbound,True,4,1/3/2024
+61581980363535,Account Access - Genpop HTS - Incorrect Disables - TP - Dublin,QUEUE_ACW,After-contact work (post-call),True,5,1/1/2025
+61581980363535,Account Access - Genpop HTS - Incorrect Disables - TP - Dublin,QUEUE_EMAIL_BACKLOG,Email � backlog clearing,True,3,1/12/2024
+61588063300667,Account Access - Genpop HTS - Incorrect Disables - TP - Dublin,QUEUE_EMAIL,Email � standard inbound,True,4,1/9/2023
+61588063300667,Account Access - Genpop HTS - Incorrect Disables - TP - Dublin,QUEUE_ACW,After-contact work (post-call),True,5,1/9/2023
+61588449381350,Account Access - Genpop HTS - Incorrect Disables - TP - Dublin,QUEUE_EMAIL,Email � standard inbound,True,4,1/11/2024
+61588449381350,Account Access - Genpop HTS - Incorrect Disables - TP - Dublin,QUEUE_ACW,After-contact work (post-call),True,5,1/11/2025
+61588449381350,Account Access - Genpop HTS - Incorrect Disables - TP - Dublin,QUEUE_EMAIL_BACKLOG,Email � backlog clearing,True,3,1/10/2023
